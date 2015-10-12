@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    {{ gettext('Concent header') }}
+    <ul class=entries>
+      {% for attr in attributes %}
+        <li>{{attr}}</li>
+      {% endfor %}
+    </ul>
+    <form action="save_consent">
+        <input type="submit" name="ok" value="{{ gettext('Yes') }}">
+        <input type="submit" name="ok" value="{{ gettext('No') }}">
+        <input type="hidden" name="state" value="{{ state }}">
+    </form>
+</body>
+</html>
