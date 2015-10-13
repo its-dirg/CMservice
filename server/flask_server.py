@@ -1,9 +1,7 @@
 from uuid import uuid4
 from flask import render_template
 from flask.ext.babel import Babel, gettext
-from jwkest import jws
 from jwkest.jwk import rsa_load, RSAKey
-from jwkest.jwt import JWT
 from cmservice import ConsentManager, ConectPolicy, DictConsentDb, Consent
 from flask import Flask
 from flask import abort
@@ -16,6 +14,7 @@ from datetime import datetime
 __author__ = 'haho0032'
 
 app = Flask(__name__)
+app.config.from_pyfile("settings.cfg")
 babel = Babel(app)
 
 
@@ -58,10 +57,19 @@ def save_cocent():
     return redirect(redirect_uri)
 
 if __name__ == "__main__":
-    _bkey = rsa_load("./keys/test.pub")
-    p_key = RSAKey().load_key(_bkey)
-    app.config["key"] = [p_key]
+    import ssl
+    context = None
+    if app.config['SSL']:
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        context.load_cert_chain(app.config["SERVER_CERT"], app.config["SERVER_KEY"])
+    keys = []
+    for key in app.config["JWT_PUB_KEY"]:
+        _bkey = rsa_load(key)
+        pub_key = RSAKey().load_key(_bkey)
+        keys.append(pub_key)
     global cm
-    cm = ConsentManager(DictConsentDb(), ConectPolicy.month, [p_key])
-    app.secret_key = 'fdgfds%€#&436gfjhköltfsdjglök34j5oö43ijtglkfdjgasdftglok432jtgerfd'
-    app.run()
+    cm = ConsentManager(DictConsentDb(), ConectPolicy.month, keys)
+    app.secret_key = app.config['SECRET_SESSION_KEY']
+    #app.run()
+    app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'],
+            ssl_context=context)
