@@ -7,8 +7,12 @@
 <body>
     {{ gettext('Concent header') }}
     <ul class=entries>
-      {% for attr in attributes %}
-        <li>{{attr["key"]}}:{{attr["value"]}} </li>
+      {% for key in attributes %}
+        <li>{{key}}:
+        {% for attr in attributes[key] %}
+            {{attr}},
+        {% endfor %}
+        </li>
       {% endfor %}
     </ul>
     <form action="save_consent">

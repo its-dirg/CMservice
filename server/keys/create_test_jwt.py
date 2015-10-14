@@ -14,9 +14,9 @@ if __name__ == "__main__":
     data = {
         "redirect_endpoint": "http://www.google.se",
         "id": "qwerty",
-        "attr": [{"key": "attr1", "value": "Attribute 1"},
-                 {"key": "attr2", "value": "Attribute 2"},
-                 {"key": "attr3", "value": "Attribute 3"}]
+        "attr": {"attr1": ["Attribute 1:1", "Attribute 1:2"],
+                 "attr2": ["Attribute 2"],
+                 "attr3": ["Attribute 3"]}
     }
     _jws = JWS(json.dumps(data), alg=algorithm)
     _jws = _jws.sign_compact([sign_key])
