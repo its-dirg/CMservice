@@ -1,6 +1,10 @@
+import base64
 from enum import Enum
 from calendar import monthrange
 from datetime import datetime, timedelta
+import hashlib
+from time import gmtime, mktime
+from urllib.parse import quote_plus
 from jwkest import jws
 from jwkest.jwt import JWT
 
@@ -29,6 +33,22 @@ class Consent(object):
         self.timestamp = timestamp
 
 
+class TicketData(object):
+
+    def __init__(self, timestamp, data):
+        """
+
+        :timestamp datetime
+        :jwt: dict
+
+        :param timestamp:
+        :param data:
+        :return:
+        """
+        self.timestamp = timestamp
+        self.data = data
+
+
 class ConsentDb(object):
     """This is a base class that defines the method that must be implemented to keep state"""
 
@@ -42,6 +62,19 @@ class ConsentDb(object):
         """
         raise NotImplementedError("Must be implemented!")
 
+    def save_consent_request(self, ticket, data):
+        """
+        Will save a concent request and generate a ticket.
+
+        :type ticket: str
+        :type data: TicketData
+        :rtype: str
+
+        :param id: A consent ticket.
+        :param data: Ticket data.
+        """
+        raise NotImplementedError("Must be implemented!")
+
     def get_consent(self, id):
         """
         Will retrive a given consent.
@@ -53,11 +86,33 @@ class ConsentDb(object):
         """
         raise NotImplementedError("Must be implemented!")
 
+    def get_ticketdata(self, ticket):
+        """
+        Will retrive registered data for a ticket.
+
+        :type id: str
+        :rtype: TicketData
+
+        :param id: The identification for a consent.
+        :return: The data connected to a ticket.
+        """
+        raise NotImplementedError("Must be implemented!")
+
+    def remove_ticket(self, ticket):
+        """
+        Removes a ticket from the database.
+        :type ticket: str
+
+        :param ticket: A consent ticket.
+        """
+        raise NotImplementedError("Must be implemented!")
+
 
 class DictConsentDb(ConsentDb):
 
     def __init__(self):
-        self.db = {}
+        self.c_db = {}
+        self.tickets = {}
 
     def save_consent(self, consent):
         """
@@ -67,7 +122,20 @@ class DictConsentDb(ConsentDb):
 
         :param consent: A given consent. A consent is always allow.
         """
-        self.db[consent.id] = consent
+        self.c_db[consent.id] = consent
+
+    def save_consent_request(self, ticket, data):
+        """
+        Will save a concent request and generate a ticket.
+
+        :type ticket: str
+        :type data: TicketData
+        :rtype: str
+
+        :param id: A consent ticket.
+        :param data: Ticket data.
+        """
+        self.tickets[ticket] = data
 
     def get_consent(self, id):
         """
@@ -78,26 +146,55 @@ class DictConsentDb(ConsentDb):
         :param id: The identification for a consent.
         :return: A given consent.
         """
-        if id not in self.db:
+        if id not in self.c_db:
             return None
-        return self.db[id]
+        return self.c_db[id]
+
+    def get_ticketdata(self, ticket):
+        """
+        Will retrive registered data for a ticket.
+
+        :type id: str
+        :rtype: TicketData
+
+        :param id: The identification for a consent.
+        :return: The data connected to a ticket.
+        """
+        if ticket in self.tickets:
+            return self.tickets[ticket]
+        return None
+
+    def remove_ticket(self, ticket):
+        """
+        Removes a ticket from the database.
+        :type ticket: str
+
+        :param ticket: A consent ticket.
+        """
+        if ticket in self.tickets:
+            self.tickets.pop(ticket)
 
 
 class ConsentManager(object):
 
-    def __init__(self, db, policy, keys):
+    def __init__(self, db, policy, keys, ticket_ttl):
         """
 
         :type db: ConsentDb
         :type policy: ConectPolicy
+        :type keys: []
+        :type ticket_ttl: int
 
         :param db:
         :param policy:
+        :param keys: Public keys to verify JWT signature.
+        :param ticket_ttl: How long the ticket should live in seconds.
         :return:
         """
         self.db = db
         self.policy = policy
         self.keys = keys
+        self.ticket_ttl = ticket_ttl
 
     def find_consent(self, id):
         consent = self.db.get_consent(id)
@@ -112,15 +209,40 @@ class ConsentManager(object):
             return True
         return False
 
-    def get_attributes(self, jwt):
+    def verify_ticket(self, ticket):
+        """
+        Verifies if the ticket is valid and removes it from the database.
+        :param ticket:
+        :return:
+        """
+        data = self.db.get_ticketdata(ticket)
+        if (datetime.now()-data.timestamp).total_seconds() > self.ticket_ttl:
+            self.db.remove_ticket(ticket)
+
+    def save_consent_req(self, jwt):
+        self.verify_jwt(jwt)
+        jso = self.unpack_jwt(jwt)
+        ticket = hashlib.sha256((jwt + str(mktime(gmtime()))).encode("UTF-8")).hexdigest()
+        data = TicketData(datetime.now(), jso)
+        self.db.save_consent_request(ticket, data)
+        return ticket
+
+    def verify_jwt(self, jwt):
+        _jw = jws.factory(jwt)
+        _jw.verify_compact(jwt, self.keys)
+
+    def unpack_jwt(self, jwt):
+        _jwt = JWT().unpack(jwt)
+        jso = _jwt.payload()
+        if "id" not in jso or "attr" not in jso or "redirect_endpoint" not in jso:
+            return None
+        return jso
+
+    def get_attributes(self, ticket):
         try:
-            _jw = jws.factory(jwt)
-            _jw.verify_compact(jwt, self.keys)
-            _jwt = JWT().unpack(jwt)
-            jso = _jwt.payload()
-            if "id" not in jso or "attr" not in jso or "redirect_endpoint" not in jso:
-                return None
-            return jso
+            ticketdata = self.db.get_ticketdata(ticket)
+            self.db.remove_ticket(ticket)
+            return ticketdata.data
         except:
             return None
 

@@ -30,18 +30,30 @@ def verify(id):
     abort(401)
 
 
+@app.route("/creq/<jwt>")
+def creq(jwt):
+    try:
+        ticket = cm.save_consent_req(jwt)
+        return ticket
+    except:
+        abort(400)
+
+
 @app.route('/consent', methods=['GET'])
 def consent():
-    gettext("test")
-    jwt = request.args["jwt"]
-    jso = cm.get_attributes(jwt)
-    if jso is None:
-        abort(403)
-    session["id"] = jso["id"]
-    session["state"] = uuid4().urn
-    session["redirect_endpoint"] = jso["redirect_endpoint"]
-    return render_template('consent.html', state=session["state"],
-                           attributes=jso["attr"])
+    try:
+        #gettext("test")
+        ticket = request.args["ticket"]
+        data = cm.get_attributes(ticket)
+        if data is None:
+            abort(403)
+        session["id"] = data["id"]
+        session["state"] = uuid4().urn
+        session["redirect_endpoint"] = data["redirect_endpoint"]
+        return render_template('consent.html', state=session["state"],
+                               attributes=data["attr"])
+    except Exception as ex:
+        abort(400)
 
 
 @app.route('/save_consent', methods=['GET'])
@@ -68,7 +80,7 @@ if __name__ == "__main__":
         pub_key = RSAKey().load_key(_bkey)
         keys.append(pub_key)
     global cm
-    cm = ConsentManager(DictConsentDb(), ConectPolicy.month, keys)
+    cm = ConsentManager(DictConsentDb(), ConectPolicy.month, keys, app.config["TICKET_TTL"])
     app.secret_key = app.config['SECRET_SESSION_KEY']
     #app.run()
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'],
