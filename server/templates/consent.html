@@ -8,10 +8,7 @@
     {{ gettext('Concent header') }}
     <ul class=entries>
       {% for key in attributes %}
-        <li>{{key}}:
-        {% for attr in attributes[key] %}
-            {{attr}},
-        {% endfor %}
+        <li>{{key}}: {{attributes[key]}},
         </li>
       {% endfor %}
     </ul>
