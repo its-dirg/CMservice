@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-10-29 22:25+0100\n"
-"PO-Revision-Date: 2015-10-29 22:27+0100\n"
+"POT-Creation-Date: 2015-10-29 22:34+0100\n"
+"PO-Revision-Date: 2015-10-29 22:34+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -22,10 +22,10 @@ msgid "Concent header"
 msgstr "My concent"
 
 #: templates/consent.html:16
-msgid "Yes"
-msgstr "YES"
+msgid "YESS"
+msgstr "Yes"
 
 #: templates/consent.html:17
-msgid "No"
-msgstr "NO"
+msgid "NOO"
+msgstr "No"
 
