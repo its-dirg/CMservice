@@ -20,7 +20,7 @@ babel = Babel(app)
 
 @babel.localeselector
 def get_locale():
-    return request.accept_languages.best_match(['sv', 'en'])
+    return request.accept_languages.best_match(['sv', 'en', "sv_se"])
 
 
 @app.route("/verify/<id>")
