@@ -20,7 +20,7 @@ babel = Babel(app)
 
 @babel.localeselector
 def get_locale():
-    return request.accept_languages.best_match(['sv_se', 'en'])
+    return request.accept_languages.best_match(['sv', 'en'])
 
 
 @app.route("/verify/<id>")
@@ -82,6 +82,5 @@ if __name__ == "__main__":
     global cm
     cm = ConsentManager(DictConsentDb(), ConectPolicy.month, keys, app.config["TICKET_TTL"])
     app.secret_key = app.config['SECRET_SESSION_KEY']
-    #app.run()
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'],
             ssl_context=context)
