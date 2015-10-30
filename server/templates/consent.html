@@ -13,8 +13,8 @@
       {% endfor %}
     </ul>
     <form action="save_consent">
-        <input type="submit" name="ok" value="{{ gettext('YESS') }}">
-        <input type="submit" name="ok" value="{{ gettext('NOO') }}">
+        <button name="ok" value="Yes" type="submit">{{ gettext('YESS') }}</button>
+        <button name="ok" value="No" type="submit">{{ gettext('NOO') }}</button>
         <input type="hidden" name="state" value="{{ state }}">
     </form>
 </body>
