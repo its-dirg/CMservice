@@ -1,21 +1,40 @@
 from uuid import uuid4
-from flask import render_template
-from flask.ext.babel import Babel, gettext
+from flask.ext.babel import Babel
+from babel.support import LazyProxy
+from flask.ext.mako import MakoTemplates, render_template
 from jwkest.jwk import rsa_load, RSAKey
+from mako.lookup import TemplateLookup
 from cmservice import ConsentManager, ConectPolicy, DictConsentDb, Consent
 from flask import Flask
+from flask import g
 from flask import abort
 from flask import request
 from flask import session
 from flask import redirect
 from datetime import datetime
-
+import traceback
 
 __author__ = 'haho0032'
 
 app = Flask(__name__)
 app.config.from_pyfile("settings.cfg")
+mako = MakoTemplates()
+mako.init_app(app)
+app._mako_lookup = TemplateLookup(directories=["templates"],
+                                  input_encoding='utf-8', output_encoding='utf-8',
+                                  imports=["from flask.ext.babel import gettext as _"])
+
 babel = Babel(app)
+
+
+def ugettext(s):
+    # we assume a before_request function
+    # assigns the correct user-specific
+    # translations
+    return g.translations.ugettext(s)
+
+
+ugettext_lazy = LazyProxy(ugettext)
 
 
 @babel.localeselector
@@ -42,7 +61,7 @@ def creq(jwt):
 @app.route('/consent', methods=['GET'])
 def consent():
     try:
-        #gettext("test")
+        # gettext("test")
         ticket = request.args["ticket"]
         data = cm.get_attributes(ticket)
         if data is None:
@@ -50,9 +69,23 @@ def consent():
         session["id"] = data["id"]
         session["state"] = uuid4().urn
         session["redirect_endpoint"] = data["redirect_endpoint"]
-        return render_template('consent.html', state=session["state"],
-                               attributes=data["attr"])
+        client_name = "TODO"
+
+        # question = ugettext_lazy("{client_name} requires the information below to be transferred:").format(
+        #     client_name=client_name)
+        question = "{client_name} requires the information below to be transferred:".format(
+            client_name=client_name)
+
+        return render_template('consent.mako',
+                               consent_question=question,
+                               state=session["state"],
+                               released_claims=data["attr"],
+                               form_action='/consent',
+                               name="mako",
+                               language=request.accept_languages.best_match(['sv', 'en', "sv_se"]))
     except Exception as ex:
+        if app.debug:
+            traceback.print_exc()
         abort(400)
 
 
@@ -68,8 +101,10 @@ def save_cocent():
         session.clear()
     return redirect(redirect_uri)
 
+
 if __name__ == "__main__":
     import ssl
+
     context = None
     if app.config['SSL']:
         context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)

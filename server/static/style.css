@@ -1,0 +1,40 @@
+.wrapper {
+    width: 60%;
+    background-color: floralwhite;
+    border-radius: 15px;
+    padding-bottom: 5px;
+    box-shadow: 2px 2px 10px #AAAAAA;
+    margin-top: 30px;
+}
+
+.wrapper .title {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    background-color: orange;
+    margin-bottom: 10px;
+}
+
+.title h1 {
+    color: white;
+}
+
+.wrapper .table th, .wrapper .table td {
+    border-top: none;
+}
+
+hr {
+    border-color: darkgrey;
+}
+
+.table-striped > tbody > tr:nth-child(odd) > td {
+    background-color: navajowhite;
+}
+
+.wrapper select {
+    padding: 3px;
+    margin-top: 5px;
+    border-radius: 4px;
+    background: floralwhite;
+    border: 1px darkgrey;
+    outline: none;
+}
