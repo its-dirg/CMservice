@@ -19,7 +19,7 @@
 <br>
 <hr>
 
-<div><b>${requester_name}</b> would like to access the following attributes:</div>
+<div><b>${requester_name}</b> ${_("would like to access the following attributes:")}</div>
 <br>
 
 <div style="clear: both;">
