@@ -19,6 +19,16 @@
 <br>
 <hr>
 
+<div><b>${requester_name}</b> would like to access the following attributes:</div>
+<br>
+
+<div style="clear: both;">
+    % for attribute in released_claims:
+        <strong>${_(attribute).capitalize()}</strong><br><pre>    ${released_claims[attribute] | list2str}</pre>
+    % endfor
+</div>
+<br>
+
 <form name="allow_consent" action="/save_consent" method="GET"
       style="float: left">
     <button name="ok" value="Yes" id="submit_ok" type="submit">${_('Ok, accept')}</button>
@@ -29,13 +39,5 @@
     <button name="ok" value="No" id="submit_deny" type="submit">${_('No, cancel')}</button>
     ${extra_inputs()}
 </form>
-
 <br>
-<br>
-
-<div style="clear: both;">
-    % for attribute in released_claims:
-        <strong>${_(attribute).capitalize()}</strong><br><pre>    ${released_claims[attribute] | list2str}</pre>
-    % endfor
-</div>
 <br>

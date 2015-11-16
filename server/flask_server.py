@@ -1,18 +1,20 @@
 from uuid import uuid4
+from datetime import datetime
+import traceback
+
 from flask.ext.babel import Babel
 from babel.support import LazyProxy
 from flask.ext.mako import MakoTemplates, render_template
 from jwkest.jwk import rsa_load, RSAKey
 from mako.lookup import TemplateLookup
-from cmservice import ConsentManager, ConectPolicy, DictConsentDb, Consent
 from flask import Flask
 from flask import g
 from flask import abort
 from flask import request
 from flask import session
 from flask import redirect
-from datetime import datetime
-import traceback
+
+from cmservice import ConsentManager, ConectPolicy, DictConsentDb, Consent
 
 __author__ = 'haho0032'
 
@@ -39,7 +41,10 @@ ugettext_lazy = LazyProxy(ugettext)
 
 @babel.localeselector
 def get_locale():
-    return request.accept_languages.best_match(['sv', 'en', "sv_se"])
+    try:
+        return session['language']
+    except:
+        pass
 
 
 @app.route("/verify/<id>")
@@ -69,20 +74,51 @@ def consent():
         session["id"] = data["id"]
         session["state"] = uuid4().urn
         session["redirect_endpoint"] = data["redirect_endpoint"]
-        client_name = "TODO"
+        session["attr"] = data["attr"]
+        session["requester_name"] = data["requester_name"]
 
-        # question = ugettext_lazy("{client_name} requires the information below to be transferred:").format(
-        #     client_name=client_name)
-        question = "{client_name} requires the information below to be transferred:".format(
-            client_name=client_name)
+        return render_consent(language=request.accept_languages.best_match(['sv', 'en']))
+    except Exception as ex:
+        if app.debug:
+            traceback.print_exc()
+        abort(400)
 
-        return render_template('consent.mako',
-                               consent_question=question,
-                               state=session["state"],
-                               released_claims=data["attr"],
-                               form_action='/consent',
-                               name="mako",
-                               language=request.accept_languages.best_match(['sv', 'en', "sv_se"]))
+
+def render_consent(language):
+    # question = ugettext_lazy("{client_name} requires the information below to be transferred:").format(
+    #     client_name=client_name)
+    # question = "{client_name} requires the information below to be transferred:".format(
+    #     client_name=session["requester_name"])
+    session['language'] = language
+
+    requester_name = find_requester_name(language)
+    if not requester_name:
+        requester_name = find_requester_name("en")
+    if not requester_name:
+        requester_name = session["requester_name"][0]['text']
+
+    return render_template('consent.mako',
+                           consent_question=None,
+                           state=session["state"],
+                           released_claims=session["attr"],
+                           form_action='/set_language',
+                           name="mako",
+                           language=language,
+                           requester_name=requester_name)
+
+
+def find_requester_name(language):
+    match = None
+    for requester_name in session["requester_name"]:
+        if requester_name["lang"] == language:
+            match = requester_name['text']
+    return match
+
+
+@app.route('/set_language', methods=['GET'])
+def set_language():
+    try:
+        return render_consent(request.args['lang'])
     except Exception as ex:
         if app.debug:
             traceback.print_exc()
@@ -90,7 +126,7 @@ def consent():
 
 
 @app.route('/save_consent', methods=['GET'])
-def save_cocent():
+def save_consent():
     state = request.args["state"]
     redirect_uri = session["redirect_endpoint"]
     if state != session["state"]:

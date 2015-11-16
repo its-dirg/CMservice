@@ -8,7 +8,7 @@
 
 <html>
 <head>
-    <title>InAcademia <%block name="head_title"></%block></title>
+    <title>VOPaas <%block name="head_title"></%block></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="content-type" content="text/html;" charset="utf-8"/>
 
@@ -24,17 +24,17 @@
             <div class="col-md-11">
                 <h1><%block name="page_header"></%block></h1>
             </div>
-##             <!-- Language selection -->
-##             <div class="col-md-1">
-##                 <form action="${form_action}" method="POST">
-##                     <select name="lang" id="lang" onchange="this.form.submit()" class="dropdown-menu-right">
-##                         <option value="en">EN</option>
-##                         <option value="sv">SV</option>
-##                         <option value="nl">NL</option>
-##                     </select>
-##                     <%block name="extra_inputs"></%block>
-##                 </form>
-##             </div>
+            <!-- Language selection -->
+            <div class="col-md-1">
+                <form action="${form_action}" method="GET">
+                    <select name="lang" id="lang" onchange="this.form.submit()"
+                            class="dropdown-menu-right">
+                        <option value="en">EN</option>
+                        <option value="sv">SV</option>
+                    </select>
+                    <%block name="extra_inputs"></%block>
+                </form>
+            </div>
         </div>
 
         ${self.body()}
