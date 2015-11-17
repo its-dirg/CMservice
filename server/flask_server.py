@@ -1,3 +1,4 @@
+from importlib import import_module
 from uuid import uuid4
 from datetime import datetime
 import traceback
@@ -14,7 +15,7 @@ from flask import request
 from flask import session
 from flask import redirect
 
-from cmservice import ConsentManager, ConectPolicy, DictConsentDb, Consent
+from cmservice import ConsentManager, ConectPolicy, Consent, ConsentDB
 
 __author__ = 'haho0032'
 
@@ -133,10 +134,23 @@ def save_consent():
         abort(403)
     ok = request.args["ok"]
     if ok == "Yes":
-        cm.save_consent(Consent(session["id"], datetime.now()))
+        consent = Consent()
+        consent.set(session["id"], datetime.now())
+        cm.save_consent(consent)
         session.clear()
     return redirect(redirect_uri)
 
+
+def import_database_class():
+    db_module = app.config['DATABASE_CLASS_PATH']
+    path, _class = db_module.rsplit('.', 1)
+    module = import_module(path)
+    database_class = getattr(module, _class)
+    return database_class
+
+
+class MustInheritFromConsentDB(Exception):
+    pass
 
 if __name__ == "__main__":
     import ssl
@@ -151,7 +165,11 @@ if __name__ == "__main__":
         pub_key = RSAKey().load_key(_bkey)
         keys.append(pub_key)
     global cm
-    cm = ConsentManager(DictConsentDb(), ConectPolicy.month, keys, app.config["TICKET_TTL"])
+    database_class = import_database_class()
+    if not issubclass(database_class, ConsentDB):
+        raise MustInheritFromConsentDB("%s does not inherit from ConsentDB" % database_class)
+    database = database_class(*app.config['DATABASE_CLASS_PARAMETERS'])
+    cm = ConsentManager(database, ConectPolicy.month, keys, app.config["TICKET_TTL"])
     app.secret_key = app.config['SECRET_SESSION_KEY']
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'],
             ssl_context=context)

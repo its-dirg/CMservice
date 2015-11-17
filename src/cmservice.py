@@ -1,10 +1,10 @@
-import base64
 from enum import Enum
 from calendar import monthrange
 from datetime import datetime, timedelta
 import hashlib
 from time import gmtime, mktime
-from urllib.parse import quote_plus
+
+import dataset
 from jwkest import jws
 from jwkest.jwt import JWT
 
@@ -18,8 +18,9 @@ class ConectPolicy(Enum):
 
 
 class Consent(object):
+    TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
-    def __init__(self, id, timestamp):
+    def set(self, id, timestamp):
         """
 
         :type id: str
@@ -30,7 +31,25 @@ class Consent(object):
         :return:
         """
         self.id = id
-        self.timestamp = timestamp
+        self.timestamp = self.format_datetime(timestamp)
+
+    def format_datetime(self, timestamp):
+        time_string = timestamp.strftime(self.TIME_PATTERN)
+        return datetime.strptime(time_string, self.TIME_PATTERN)
+
+    def from_dict(self, dict):
+        self.id = dict['consent_id']
+        self.timestamp = datetime.strptime(dict['timestamp'], self.TIME_PATTERN)
+
+    def to_dict(self):
+        return {'consent_id': self.id, 'timestamp': self.timestamp.strftime(self.TIME_PATTERN)}
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, self.__class__) and
+            self.id == other.id and
+            self.timestamp == other.timestamp
+        )
 
 
 class TicketData(object):
@@ -49,7 +68,7 @@ class TicketData(object):
         self.data = data
 
 
-class ConsentDb(object):
+class ConsentDB(object):
     """This is a base class that defines the method that must be implemented to keep state"""
 
     def save_consent(self, consent):
@@ -108,7 +127,7 @@ class ConsentDb(object):
         raise NotImplementedError("Must be implemented!")
 
 
-class DictConsentDb(ConsentDb):
+class DictConsentDB(ConsentDB):
 
     def __init__(self):
         self.c_db = {}
@@ -175,12 +194,47 @@ class DictConsentDb(ConsentDb):
             self.tickets.pop(ticket)
 
 
+class SQLite3ConsentDB(DictConsentDB):
+    CONSENT_TABLE_NAME = 'consent'
+
+    def __init__(self, database_path=None):
+        self.c_db = dataset.connect('sqlite:///:memory:')
+        if database_path:
+            self.c_db = dataset.connect('sqlite:///' + database_path)
+        self.tickets = {}
+        self.consent_table = self.c_db[self.CONSENT_TABLE_NAME]
+
+    def save_consent(self, consent):
+        """
+        Will save a consent.
+
+        :type consent: Consent
+
+        :param consent: A given consent. A consent is always allow.
+        """
+        self.consent_table.upsert(consent.to_dict(), ['consent_id'])
+
+    def get_consent(self, id):
+        """
+        Will retrive a given consent.
+        :type id: str
+        :rtype: Consent
+
+        :param id: The identification for a consent.
+        :return: A given consent.
+        """
+        result = self.consent_table.find_one(consent_id=id)
+        consent = Consent()
+        consent.from_dict(result)
+        return consent
+
+
 class ConsentManager(object):
 
     def __init__(self, db, policy, keys, ticket_ttl):
         """
 
-        :type db: ConsentDb
+        :type db: ConsentDB
         :type policy: ConectPolicy
         :type keys: []
         :type ticket_ttl: int
