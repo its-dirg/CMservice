@@ -134,9 +134,7 @@ def save_consent():
         abort(403)
     ok = request.args["ok"]
     if ok == "Yes":
-        consent = Consent()
-        consent.set(session["id"], datetime.now())
-        cm.save_consent(consent)
+        cm.save_consent(Consent(session["id"], datetime.now()))
         session.clear()
     return redirect(redirect_uri)
 

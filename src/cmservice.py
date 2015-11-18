@@ -2,6 +2,7 @@ from enum import Enum
 from calendar import monthrange
 from datetime import datetime, timedelta
 import hashlib
+import json
 from time import gmtime, mktime
 
 import dataset
@@ -17,10 +18,16 @@ class ConectPolicy(Enum):
     never = 2
 
 
-class Consent(object):
-    TIME_PATTERN = "%Y %m %d %H:%M:%S"
+TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
-    def set(self, id, timestamp):
+
+def format_datetime(timestamp):
+    time_string = timestamp.strftime(TIME_PATTERN)
+    return datetime.strptime(time_string, TIME_PATTERN)
+
+
+class Consent(object):
+    def __init__(self, id, timestamp):
         """
 
         :type id: str
@@ -31,18 +38,19 @@ class Consent(object):
         :return:
         """
         self.id = id
-        self.timestamp = self.format_datetime(timestamp)
+        self.timestamp = format_datetime(timestamp)
 
-    def format_datetime(self, timestamp):
-        time_string = timestamp.strftime(self.TIME_PATTERN)
-        return datetime.strptime(time_string, self.TIME_PATTERN)
-
-    def from_dict(self, dict):
-        self.id = dict['consent_id']
-        self.timestamp = datetime.strptime(dict['timestamp'], self.TIME_PATTERN)
+    @staticmethod
+    def from_dict(dict):
+        try:
+            id = dict['consent_id']
+            timestamp = datetime.strptime(dict['timestamp'], TIME_PATTERN)
+            return Consent(id, timestamp)
+        except TypeError:
+            return None
 
     def to_dict(self):
-        return {'consent_id': self.id, 'timestamp': self.timestamp.strftime(self.TIME_PATTERN)}
+        return {'consent_id': self.id, 'timestamp': self.timestamp.strftime(TIME_PATTERN)}
 
     def __eq__(self, other):
         return (
@@ -53,20 +61,37 @@ class Consent(object):
 
 
 class TicketData(object):
-
     def __init__(self, timestamp, data):
         """
 
         :timestamp datetime
-        :jwt: dict
+        :data: dict
 
         :param timestamp:
         :param data:
         :return:
         """
-        self.timestamp = timestamp
+        self.timestamp = format_datetime(timestamp)
         self.data = data
 
+    @staticmethod
+    def from_dict(_dict):
+        try:
+            timestamp = datetime.strptime(_dict['timestamp'], TIME_PATTERN)
+            data = _dict['data']
+            return TicketData(timestamp, json.loads(data))
+        except TypeError:
+            return None
+
+    def to_dict(self):
+        return {'data': json.dumps(self.data), 'timestamp': self.timestamp.strftime(TIME_PATTERN)}
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, self.__class__) and
+            self.data == other.data and
+            self.timestamp == other.timestamp
+        )
 
 class ConsentDB(object):
     """This is a base class that defines the method that must be implemented to keep state"""
@@ -194,15 +219,16 @@ class DictConsentDB(ConsentDB):
             self.tickets.pop(ticket)
 
 
-class SQLite3ConsentDB(DictConsentDB):
+class SQLite3ConsentDB(ConsentDB):
     CONSENT_TABLE_NAME = 'consent'
+    TICKET_TABLE_NAME = 'ticket'
 
     def __init__(self, database_path=None):
         self.c_db = dataset.connect('sqlite:///:memory:')
         if database_path:
             self.c_db = dataset.connect('sqlite:///' + database_path)
-        self.tickets = {}
         self.consent_table = self.c_db[self.CONSENT_TABLE_NAME]
+        self.ticket_table = self.c_db[self.TICKET_TABLE_NAME]
 
     def save_consent(self, consent):
         """
@@ -224,9 +250,44 @@ class SQLite3ConsentDB(DictConsentDB):
         :return: A given consent.
         """
         result = self.consent_table.find_one(consent_id=id)
-        consent = Consent()
-        consent.from_dict(result)
-        return consent
+        return Consent.from_dict(result)
+
+    def save_consent_request(self, ticket, data):
+        """
+        Will save a concent request and generate a ticket.
+
+        :type ticket: str
+        :type data: TicketData
+        :rtype: str
+
+        :param id: A consent ticket.
+        :param data: Ticket data.
+        """
+        row = {"ticket": ticket}
+        row.update(data.to_dict())
+        self.ticket_table.upsert(row, ['ticket'])
+
+    def get_ticketdata(self, ticket):
+        """
+        Will retrive registered data for a ticket.
+
+        :type id: str
+        :rtype: TicketData
+
+        :param id: The identification for a consent.
+        :return: The data connected to a ticket.
+        """
+        result = self.ticket_table.find_one(ticket=ticket)
+        return TicketData.from_dict(result)
+
+    def remove_ticket(self, ticket):
+        """
+        Removes a ticket from the database.
+        :type ticket: str
+
+        :param ticket: A consent ticket.
+        """
+        self.ticket_table.delete(ticket=ticket)
 
 
 class ConsentManager(object):
