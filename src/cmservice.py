@@ -12,10 +12,13 @@ from jwkest.jwt import JWT
 __author__ = 'haho0032'
 
 
-class ConectPolicy(Enum):
-    year = 0
-    month = 1
-    never = 2
+class ConsentPolicy(Enum):
+    year = "year"
+    month = "month"
+    never = "never"
+
+    def __str__(self):
+        return self._name_
 
 
 TIME_PATTERN = "%Y %m %d %H:%M:%S"
@@ -26,39 +29,84 @@ def format_datetime(timestamp):
     return datetime.strptime(time_string, TIME_PATTERN)
 
 
+
 class Consent(object):
-    def __init__(self, id, timestamp):
+    def __init__(self, id, timestamp, policy):
         """
 
         :type id: str
-        :timestamp datetime
+        :type timestamp: datetime
+        :type policy: ConsentPolicy
 
         :param id:
         :param timestamp:
+        :param policy:
         :return:
         """
         self.id = id
         self.timestamp = format_datetime(timestamp)
+        self.policy = policy
 
     @staticmethod
     def from_dict(dict):
         try:
             id = dict['consent_id']
             timestamp = datetime.strptime(dict['timestamp'], TIME_PATTERN)
-            return Consent(id, timestamp)
+            policy = ConsentPolicy(dict['policy'])
+            return Consent(id, timestamp, policy)
         except TypeError:
             return None
 
     def to_dict(self):
-        return {'consent_id': self.id, 'timestamp': self.timestamp.strftime(TIME_PATTERN)}
+        return {
+            'consent_id': self.id,
+            'timestamp': self.timestamp.strftime(TIME_PATTERN),
+            'policy': str(self.policy)
+        }
 
     def __eq__(self, other):
         return (
             isinstance(other, self.__class__) and
             self.id == other.id and
-            self.timestamp == other.timestamp
+            self.timestamp == other.timestamp,
+            self.policy == other.policy
         )
 
+    def get_current_time(self):
+        return datetime.now()
+
+    def has_expired(self, policy=None):
+        if not policy:
+            policy = self.policy
+
+        current_date = self.get_current_time()
+        if policy == ConsentPolicy.never:
+            return False
+        elif policy == ConsentPolicy.month and Consent.monthdelta(self.timestamp,
+                                                                  current_date) >= 1:
+            return True
+        if policy == ConsentPolicy.year and Consent.monthdelta(self.timestamp, current_date) >= 12:
+            return True
+        return False
+
+    @staticmethod
+    def monthdelta(start_date: datetime, current_date: datetime):
+        if start_date > current_date:
+            raise StartDateInFuture("The start date, %s, is after current date, %s" %
+                                    (start_date, current_date))
+        delta = 0
+        while True:
+            mdays = monthrange(start_date.year, start_date.month)[1]
+            start_date += timedelta(days=mdays)
+            if start_date <= current_date:
+                delta += 1
+            else:
+                break
+        return delta
+
+
+class StartDateInFuture(Exception):
+    pass
 
 class TicketData(object):
     def __init__(self, timestamp, data):
@@ -250,7 +298,21 @@ class SQLite3ConsentDB(ConsentDB):
         :return: A given consent.
         """
         result = self.consent_table.find_one(consent_id=id)
-        return Consent.from_dict(result)
+        consent = Consent.from_dict(result)
+        if consent:
+            if consent.has_expired():
+                self.remove_consent(id)
+                return None
+        return consent
+
+    def remove_consent(self, id):
+        """
+        Removes a consent from the database.
+        :type id: str
+
+        :param id: The identification for a consent.
+        """
+        self.consent_table.delete(consent_id=id)
 
     def save_consent_request(self, ticket, data):
         """
@@ -290,13 +352,22 @@ class SQLite3ConsentDB(ConsentDB):
         self.ticket_table.delete(ticket=ticket)
 
 
-class ConsentManager(object):
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class ConsentManager(object, metaclass=Singleton):
 
     def __init__(self, db, policy, keys, ticket_ttl):
         """
 
         :type db: ConsentDB
-        :type policy: ConectPolicy
+        :type policy: ConsentPolicy
         :type keys: []
         :type ticket_ttl: int
 
@@ -315,14 +386,8 @@ class ConsentManager(object):
         consent = self.db.get_consent(id)
         if consent is None:
             return False
-        if self.policy == ConectPolicy.never:
-            return True
-        now = datetime.now()
-        if self.policy == ConectPolicy.month and self.monthdelta(now, consent.timestamp) == 0:
-            return True
-        if self.policy == ConectPolicy.year and self.monthdelta(now, consent.timestamp) < 12:
-            return True
-        return False
+        # TODO at the moment the user interface don't support policies
+        return not consent.has_expired(policy=self.policy)
 
     def verify_ticket(self, ticket):
         """
@@ -363,14 +428,3 @@ class ConsentManager(object):
 
     def save_consent(self, consent):
         self.db.save_consent(consent)
-
-    def monthdelta(self, date_1, date_2):
-        delta = 0
-        while True:
-            mdays = monthrange(date_1.year, date_1.month)[1]
-            date_1 += timedelta(days=mdays)
-            if date_1 <= date_2:
-                delta += 1
-            else:
-                break
-        return delta

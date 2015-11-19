@@ -15,7 +15,7 @@ from flask import request
 from flask import session
 from flask import redirect
 
-from cmservice import ConsentManager, ConectPolicy, Consent, ConsentDB
+from cmservice import ConsentManager, ConsentPolicy, Consent, ConsentDB
 
 __author__ = 'haho0032'
 
@@ -134,7 +134,7 @@ def save_consent():
         abort(403)
     ok = request.args["ok"]
     if ok == "Yes":
-        cm.save_consent(Consent(session["id"], datetime.now()))
+        cm.save_consent(Consent(session["id"], datetime.now(), ConsentPolicy.month))
         session.clear()
     return redirect(redirect_uri)
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     if not issubclass(database_class, ConsentDB):
         raise MustInheritFromConsentDB("%s does not inherit from ConsentDB" % database_class)
     database = database_class(*app.config['DATABASE_CLASS_PARAMETERS'])
-    cm = ConsentManager(database, ConectPolicy.month, keys, app.config["TICKET_TTL"])
+    cm = ConsentManager(database, ConsentPolicy.month, keys, app.config["TICKET_TTL"])
     app.secret_key = app.config['SECRET_SESSION_KEY']
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'],
             ssl_context=context)
