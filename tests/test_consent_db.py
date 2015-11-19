@@ -3,7 +3,9 @@ from unittest.mock import patch
 
 import pytest
 
-from cmservice import DictConsentDB, Consent, SQLite3ConsentDB, TicketData, ConsentPolicy
+from cmservice.consent import Consent, ConsentPolicy
+from cmservice.database import DictConsentDB, SQLite3ConsentDB
+from cmservice.ticket_data import TicketData
 
 __author__ = 'danielevertsson'
 
@@ -51,7 +53,7 @@ class TestConsentDB():
         (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 2, 2), ConsentPolicy.month),
         (datetime.datetime(2015, 1, 1), datetime.datetime(2016, 1, 2), ConsentPolicy.year),
     ])
-    @patch('cmservice.Consent.get_current_time')
+    @patch('cmservice.consent.Consent.get_current_time')
     def test_if_nothing_is_return_if_policy_has_expired(self, get_current_time, start_time,
                                                         current_time, policy):
         consent = Consent(self.consent_id, policy, self.attibutes, timestamp=start_time)
@@ -65,7 +67,7 @@ class TestConsentDB():
         (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 12, 31), ConsentPolicy.year),
         (datetime.datetime(2015, 1, 1), datetime.datetime(3015, 1, 1), ConsentPolicy.never),
     ])
-    @patch('cmservice.Consent.get_current_time')
+    @patch('cmservice.consent.Consent.get_current_time')
     def test_if_policy_has_not_yet_expired(self, get_current_time, start_time, current_time,
                                            policy):
         consent = Consent(self.consent_id, policy, self.attibutes, timestamp=start_time)

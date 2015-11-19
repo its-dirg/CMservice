@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmservice import Consent, StartDateInFuture, ConsentPolicy
+from cmservice.consent import Consent, StartDateInFuture, ConsentPolicy
 
 __author__ = 'danielevertsson'
 
@@ -29,7 +29,7 @@ class TestConsent():
         (datetime.datetime(2015, 1, 30), ConsentPolicy.month),
         (datetime.datetime(2015, 12, 30), ConsentPolicy.year),
     ])
-    @patch('cmservice.Consent.get_current_time')
+    @patch('cmservice.consent.Consent.get_current_time')
     def test_valid_consent_date(self, get_current_time, current_time, policy):
         get_current_time.return_value = current_time
         start_date = datetime.datetime(2015, 1, 1)
@@ -40,14 +40,14 @@ class TestConsent():
         (datetime.datetime(2015, 2, 1), ConsentPolicy.month),
         (datetime.datetime(2016, 1, 1), ConsentPolicy.year),
     ])
-    @patch('cmservice.Consent.get_current_time')
+    @patch('cmservice.consent.Consent.get_current_time')
     def test_consent_has_expired(self, get_current_time, current_time, policy):
         get_current_time.return_value = current_time
         start_date = datetime.datetime(2015, 1, 1)
         consent = Consent("id", policy, None, timestamp=start_date)
         assert consent.has_expired()
 
-    @patch('cmservice.Consent.get_current_time')
+    @patch('cmservice.consent.Consent.get_current_time')
     def test_start_date_in_the_future(self, get_current_time):
         get_current_time.return_value = datetime.datetime(2015, 1, 1)
         start_date = datetime.datetime(2015, 2, 1)

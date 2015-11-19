@@ -14,7 +14,9 @@ from flask import request
 from flask import session
 from flask import redirect
 
-from cmservice import ConsentManager, ConsentPolicy, Consent, ConsentDB
+from cmservice.consent import ConsentPolicy, Consent
+from cmservice.consent_manager import ConsentManager
+from cmservice.database import ConsentDB
 
 __author__ = 'haho0032'
 
