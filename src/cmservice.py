@@ -24,55 +24,79 @@ class ConsentPolicy(Enum):
 TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
 
-def format_datetime(timestamp):
-    time_string = timestamp.strftime(TIME_PATTERN)
-    return datetime.strptime(time_string, TIME_PATTERN)
+def format_datetime(datetime: datetime, format=None) -> datetime:
+    """
+    :param datetime: A datetime object to format using a given pattern
+    :param format: the format to use, if non is defined TIME_PATTERN will be used
+    :return: Formatted datetime object
+    """
+    if not format:
+        format = TIME_PATTERN
+    time_string = datetime.strftime(format)
+    return datetime.strptime(time_string, format)
 
 
 
 class Consent(object):
-    def __init__(self, id, timestamp, policy):
+    def __init__(self, id: str, policy: ConsentPolicy, attributes: list, timestamp: datetime=None):
         """
 
-        :type id: str
-        :type timestamp: datetime
-        :type policy: ConsentPolicy
-
-        :param id:
-        :param timestamp:
-        :param policy:
-        :return:
+        :param id: Identifier for the consent
+        :param timestamp: Datetime for when the consent where created
+        :param policy: The policy for how long the
+        :param attributes: A list of attribute for which the user has given consent. None equals
+               that consent has been given for all attributes
         """
+        if not timestamp:
+            timestamp = datetime.now()
         self.id = id
         self.timestamp = format_datetime(timestamp)
         self.policy = policy
+        self.attributes = attributes
 
     @staticmethod
-    def from_dict(dict):
+    def from_dict(dict: dict):
+        """
+        :param dict: The consent object as a dictionary
+        :return: Consent object created from a dictionary
+        """
         try:
             id = dict['consent_id']
             timestamp = datetime.strptime(dict['timestamp'], TIME_PATTERN)
             policy = ConsentPolicy(dict['policy'])
-            return Consent(id, timestamp, policy)
+            attributes = json.loads(dict['attributes'])
+            return Consent(id, policy, attributes, timestamp=timestamp)
         except TypeError:
             return None
 
     def to_dict(self):
+        """
+        :return: Consent object presented as a dictionary
+        """
         return {
             'consent_id': self.id,
             'timestamp': self.timestamp.strftime(TIME_PATTERN),
-            'policy': str(self.policy)
+            'policy': str(self.policy),
+            'attributes': json.dumps(self.attributes)
         }
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
+        """
+        :return: If all attributes in the consent object matches this method will return True else
+                 false.
+        """
         return (
             isinstance(other, self.__class__) and
             self.id == other.id and
             self.timestamp == other.timestamp,
-            self.policy == other.policy
+            self.policy == other.policy,
+            self.attributes == other.attributes
         )
 
-    def get_current_time(self):
+    def get_current_time(self) -> datetime:
+        """
+        :return: The current datetime
+        """
         return datetime.now()
 
     def has_expired(self, policy=None):
@@ -90,7 +114,12 @@ class Consent(object):
         return False
 
     @staticmethod
-    def monthdelta(start_date: datetime, current_date: datetime):
+    def monthdelta(start_date: datetime, current_date: datetime) -> int:
+        """
+        :param start_date: The first date FROM which the delta should be calculated
+        :param current_date: The second date TO which the delta should be calculated
+        :return: Number of months from start_date to current_date
+        """
         if start_date > current_date:
             raise StartDateInFuture("The start date, %s, is after current date, %s" %
                                     (start_date, current_date))
@@ -109,32 +138,40 @@ class StartDateInFuture(Exception):
     pass
 
 class TicketData(object):
-    def __init__(self, timestamp, data):
+    def __init__(self, data: dict, timestamp: datetime=None):
         """
-
-        :timestamp datetime
-        :data: dict
-
-        :param timestamp:
-        :param data:
-        :return:
+        :param data: Information needed to show the consent page
+        :param timestamp: the the ticket data object where created
         """
+        if not timestamp:
+            timestamp = datetime.now()
         self.timestamp = format_datetime(timestamp)
         self.data = data
 
     @staticmethod
     def from_dict(_dict):
+        """
+        :param dict: The TicketData object represented as a dictionary
+        :return: TicketData object created from a dictionary
+        """
         try:
             timestamp = datetime.strptime(_dict['timestamp'], TIME_PATTERN)
             data = _dict['data']
-            return TicketData(timestamp, json.loads(data))
+            return TicketData(json.loads(data), timestamp=timestamp)
         except TypeError:
             return None
 
     def to_dict(self):
+        """
+        :return: TicketData object as a dictionary
+        """
         return {'data': json.dumps(self.data), 'timestamp': self.timestamp.strftime(TIME_PATTERN)}
 
     def __eq__(self, other):
+        """
+        :return: If all attributes in the TicketData object matches this method will return True
+                 else False.
+        """
         return (
             isinstance(other, self.__class__) and
             self.data == other.data and
@@ -144,56 +181,44 @@ class TicketData(object):
 class ConsentDB(object):
     """This is a base class that defines the method that must be implemented to keep state"""
 
-    def save_consent(self, consent):
+    def save_consent(self, consent: Consent):
         """
         Will save a consent.
-
-        :type consent: Consent
 
         :param consent: A given consent. A consent is always allow.
         """
         raise NotImplementedError("Must be implemented!")
 
-    def save_consent_request(self, ticket, data):
+    def save_consent_request(self, ticket: str, data: TicketData) -> str:
         """
         Will save a concent request and generate a ticket.
-
-        :type ticket: str
-        :type data: TicketData
-        :rtype: str
 
         :param id: A consent ticket.
         :param data: Ticket data.
         """
         raise NotImplementedError("Must be implemented!")
 
-    def get_consent(self, id):
+    def get_consent(self, id: str) -> Consent:
         """
         Will retrive a given consent.
-        :type id: str
-        :rtype: Consent
 
         :param id: The identification for a consent.
         :return: A given consent.
         """
         raise NotImplementedError("Must be implemented!")
 
-    def get_ticketdata(self, ticket):
+    def get_ticketdata(self, ticket: str) -> TicketData:
         """
         Will retrive registered data for a ticket.
 
-        :type id: str
-        :rtype: TicketData
-
-        :param id: The identification for a consent.
+        :param ticket: The identification for a TicketData object.
         :return: The data connected to a ticket.
         """
         raise NotImplementedError("Must be implemented!")
 
-    def remove_ticket(self, ticket):
+    def remove_ticket(self, ticket: str):
         """
         Removes a ticket from the database.
-        :type ticket: str
 
         :param ticket: A consent ticket.
         """
@@ -206,34 +231,26 @@ class DictConsentDB(ConsentDB):
         self.c_db = {}
         self.tickets = {}
 
-    def save_consent(self, consent):
+    def save_consent(self, consent: Consent):
         """
         Will save a consent.
-
-        :type consent: Consent
 
         :param consent: A given consent. A consent is always allow.
         """
         self.c_db[consent.id] = consent
 
-    def save_consent_request(self, ticket, data):
+    def save_consent_request(self, ticket: str, data: TicketData) -> str:
         """
         Will save a concent request and generate a ticket.
-
-        :type ticket: str
-        :type data: TicketData
-        :rtype: str
 
         :param id: A consent ticket.
         :param data: Ticket data.
         """
         self.tickets[ticket] = data
 
-    def get_consent(self, id):
+    def get_consent(self, id: str) -> Consent:
         """
         Will retrive a given consent.
-        :type id: str
-        :rtype: Consent
 
         :param id: The identification for a consent.
         :return: A given consent.
@@ -242,12 +259,9 @@ class DictConsentDB(ConsentDB):
             return None
         return self.c_db[id]
 
-    def get_ticketdata(self, ticket):
+    def get_ticketdata(self, ticket: str) -> TicketData:
         """
         Will retrive registered data for a ticket.
-
-        :type id: str
-        :rtype: TicketData
 
         :param id: The identification for a consent.
         :return: The data connected to a ticket.
@@ -256,10 +270,9 @@ class DictConsentDB(ConsentDB):
             return self.tickets[ticket]
         return None
 
-    def remove_ticket(self, ticket):
+    def remove_ticket(self, ticket: str):
         """
         Removes a ticket from the database.
-        :type ticket: str
 
         :param ticket: A consent ticket.
         """
@@ -278,21 +291,28 @@ class SQLite3ConsentDB(ConsentDB):
         self.consent_table = self.c_db[self.CONSENT_TABLE_NAME]
         self.ticket_table = self.c_db[self.TICKET_TABLE_NAME]
 
-    def save_consent(self, consent):
+    def save_consent(self, consent: Consent):
         """
         Will save a consent.
-
-        :type consent: Consent
 
         :param consent: A given consent. A consent is always allow.
         """
         self.consent_table.upsert(consent.to_dict(), ['consent_id'])
 
-    def get_consent(self, id):
+    def save_consent_request(self, ticket: str, data: TicketData) -> str:
+        """
+        Will save a concent request and generate a ticket.
+
+        :param id: A consent ticket.
+        :param data: Ticket data.
+        """
+        row = {"ticket": ticket}
+        row.update(data.to_dict())
+        self.ticket_table.upsert(row, ['ticket'])
+
+    def get_consent(self, id: str) -> Consent:
         """
         Will retrive a given consent.
-        :type id: str
-        :rtype: Consent
 
         :param id: The identification for a consent.
         :return: A given consent.
@@ -305,36 +325,17 @@ class SQLite3ConsentDB(ConsentDB):
                 return None
         return consent
 
-    def remove_consent(self, id):
+    def remove_consent(self, id: str):
         """
         Removes a consent from the database.
-        :type id: str
 
         :param id: The identification for a consent.
         """
         self.consent_table.delete(consent_id=id)
 
-    def save_consent_request(self, ticket, data):
-        """
-        Will save a concent request and generate a ticket.
-
-        :type ticket: str
-        :type data: TicketData
-        :rtype: str
-
-        :param id: A consent ticket.
-        :param data: Ticket data.
-        """
-        row = {"ticket": ticket}
-        row.update(data.to_dict())
-        self.ticket_table.upsert(row, ['ticket'])
-
-    def get_ticketdata(self, ticket):
+    def get_ticketdata(self, ticket: str) -> TicketData:
         """
         Will retrive registered data for a ticket.
-
-        :type id: str
-        :rtype: TicketData
 
         :param id: The identification for a consent.
         :return: The data connected to a ticket.
@@ -342,10 +343,9 @@ class SQLite3ConsentDB(ConsentDB):
         result = self.ticket_table.find_one(ticket=ticket)
         return TicketData.from_dict(result)
 
-    def remove_ticket(self, ticket):
+    def remove_ticket(self, ticket: str):
         """
         Removes a ticket from the database.
-        :type ticket: str
 
         :param ticket: A consent ticket.
         """
@@ -362,63 +362,76 @@ class Singleton(type):
 
 
 class ConsentManager(object, metaclass=Singleton):
-
-    def __init__(self, db, policy, keys, ticket_ttl):
+    def __init__(self, db: ConsentDB, policy: ConsentPolicy, keys: list, ticket_ttl: int):
         """
-
-        :type db: ConsentDB
-        :type policy: ConsentPolicy
-        :type keys: []
-        :type ticket_ttl: int
-
         :param db:
         :param policy:
         :param keys: Public keys to verify JWT signature.
         :param ticket_ttl: How long the ticket should live in seconds.
-        :return:
         """
         self.db = db
         self.policy = policy
         self.keys = keys
         self.ticket_ttl = ticket_ttl
 
-    def find_consent(self, id):
+    def find_consent(self, id: int):
+        """
+        :param id: Identifier for a given consent
+        :return True if valid consent exists else false
+        """
         consent = self.db.get_consent(id)
         if consent is None:
             return False
         # TODO at the moment the user interface don't support policies
         return not consent.has_expired(policy=self.policy)
 
-    def verify_ticket(self, ticket):
+    def verify_ticket(self, ticket: str):
         """
         Verifies if the ticket is valid and removes it from the database.
-        :param ticket:
-        :return:
+
+        :param ticket: Identifier for a ticket
         """
         data = self.db.get_ticketdata(ticket)
         if (datetime.now()-data.timestamp).total_seconds() > self.ticket_ttl:
             self.db.remove_ticket(ticket)
 
-    def save_consent_req(self, jwt):
+    def save_consent_req(self, jwt: str):
+        """
+        Verifies if the ticket is valid and removes it from the database.
+
+        :param jwt: JWT represented as a string
+        """
         self.verify_jwt(jwt)
         jso = self.unpack_jwt(jwt)
         ticket = hashlib.sha256((jwt + str(mktime(gmtime()))).encode("UTF-8")).hexdigest()
-        data = TicketData(datetime.now(), jso)
+        data = TicketData(jso)
         self.db.save_consent_request(ticket, data)
         return ticket
 
-    def verify_jwt(self, jwt):
+    def verify_jwt(self, jwt: str):
+        """
+        Verifies the signature of the JWT
+
+        :param jwt: JWT represented as a string
+        """
         _jw = jws.factory(jwt)
         _jw.verify_compact(jwt, self.keys)
 
-    def unpack_jwt(self, jwt):
+    def unpack_jwt(self, jwt: str):
+        """
+        :param jwt: JWT represented as a string
+        """
         _jwt = JWT().unpack(jwt)
         jso = _jwt.payload()
         if "id" not in jso or "attr" not in jso or "redirect_endpoint" not in jso:
             return None
         return jso
 
-    def get_attributes(self, ticket):
+    def get_attributes(self, ticket: str):
+        """
+        :param ticket: Identifier for the ticket
+        :return: Information about the consent request
+        """
         try:
             ticketdata = self.db.get_ticketdata(ticket)
             self.db.remove_ticket(ticket)
@@ -427,4 +440,7 @@ class ConsentManager(object, metaclass=Singleton):
             return None
 
     def save_consent(self, consent):
+        """
+        :param consent: The consent object to store
+        """
         self.db.save_consent(consent)

@@ -1,6 +1,5 @@
 from importlib import import_module
 from uuid import uuid4
-from datetime import datetime
 import traceback
 
 from flask.ext.babel import Babel
@@ -86,10 +85,6 @@ def consent():
 
 
 def render_consent(language):
-    # question = ugettext_lazy("{client_name} requires the information below to be transferred:").format(
-    #     client_name=client_name)
-    # question = "{client_name} requires the information below to be transferred:".format(
-    #     client_name=session["requester_name"])
     session['language'] = language
 
     requester_name = find_requester_name(language)
@@ -134,7 +129,7 @@ def save_consent():
         abort(403)
     ok = request.args["ok"]
     if ok == "Yes":
-        cm.save_consent(Consent(session["id"], datetime.now(), ConsentPolicy.month))
+        cm.save_consent(Consent(session["id"], ConsentPolicy.month, None))
         session.clear()
     return redirect(redirect_uri)
 

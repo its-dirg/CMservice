@@ -13,9 +13,11 @@ class TestConsentDB():
     def setup(self):
         self.ticket = "ticket_123"
         self.time = datetime.datetime.now()
-        self.data = TicketData(self.time, {"asd": "asd"})
+        self.data = TicketData({"asd": "asd"}, timestamp=self.time)
         self.consent_id = "id_123"
-        self.consent = Consent(self.consent_id, self.time, ConsentPolicy.month)
+        self.attibutes = ["name", "email"]
+        self.consent = Consent(self.consent_id, ConsentPolicy.month, self.attibutes,
+                               timestamp=self.time)
 
     @pytest.mark.parametrize("database", [
         DictConsentDB(),
@@ -52,7 +54,7 @@ class TestConsentDB():
     @patch('cmservice.Consent.get_current_time')
     def test_if_nothing_is_return_if_policy_has_expired(self, get_current_time, start_time,
                                                         current_time, policy):
-        consent = Consent(self.consent_id, start_time, policy)
+        consent = Consent(self.consent_id, policy, self.attibutes, timestamp=start_time)
         get_current_time.return_value = current_time
         database = SQLite3ConsentDB()
         database.save_consent(consent)
@@ -66,7 +68,7 @@ class TestConsentDB():
     @patch('cmservice.Consent.get_current_time')
     def test_if_policy_has_not_yet_expired(self, get_current_time, start_time, current_time,
                                            policy):
-        consent = Consent(self.consent_id, start_time, policy)
+        consent = Consent(self.consent_id, policy, self.attibutes, timestamp=start_time)
         get_current_time.return_value = current_time
         database = SQLite3ConsentDB()
         database.save_consent(consent)
@@ -78,3 +80,13 @@ class TestConsentDB():
         assert database.get_consent(self.consent_id)
         database.remove_consent(self.consent_id)
         assert not database.get_consent(self.consent_id)
+
+    def test_save_consent_for_all_attributes_by_entering_none(self):
+        database = SQLite3ConsentDB()
+        consent = Consent(
+            self.consent_id,
+            ConsentPolicy.never,
+            None
+        )
+        database.save_consent(consent)
+        assert database.get_consent(self.consent_id) == consent

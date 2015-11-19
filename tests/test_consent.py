@@ -33,7 +33,7 @@ class TestConsent():
     def test_valid_consent_date(self, get_current_time, current_time, policy):
         get_current_time.return_value = current_time
         start_date = datetime.datetime(2015, 1, 1)
-        consent = Consent("id", start_date, policy)
+        consent = Consent("id", policy, None, timestamp=start_date)
         assert not consent.has_expired()
 
     @pytest.mark.parametrize("current_time, policy", [
@@ -44,13 +44,13 @@ class TestConsent():
     def test_consent_has_expired(self, get_current_time, current_time, policy):
         get_current_time.return_value = current_time
         start_date = datetime.datetime(2015, 1, 1)
-        consent = Consent("id", start_date, policy)
+        consent = Consent("id", policy, None, timestamp=start_date)
         assert consent.has_expired()
 
     @patch('cmservice.Consent.get_current_time')
     def test_start_date_in_the_future(self, get_current_time):
         get_current_time.return_value = datetime.datetime(2015, 1, 1)
         start_date = datetime.datetime(2015, 2, 1)
-        consent = Consent("id", start_date, ConsentPolicy.month)
+        consent = Consent("id", ConsentPolicy.month, None, timestamp=start_date)
         with pytest.raises(StartDateInFuture):
             consent.has_expired()
