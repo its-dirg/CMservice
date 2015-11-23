@@ -10,7 +10,9 @@ from jwkest.jwk import rsa_load, RSAKey
 from mako.lookup import TemplateLookup
 from flask import Flask
 from flask import g
+
 from flask import abort
+
 from flask import request
 
 from flask import session
@@ -111,7 +113,8 @@ def render_consent(language):
         name="mako",
         language=language,
         requester_name=requester_name,
-        policies=ConsentPolicy.to_list()
+        policies=ConsentPolicy.to_list(),
+        select_attributes=str(app.config["AUTO_SELECT_ATTRIBUTES"])
     )
 
 
@@ -133,16 +136,26 @@ def set_language():
         abort(400)
 
 
+def isSubset(list_, sub_list):
+    return set(sub_list) <= set(list_)
+
+
 @app.route('/save_consent', methods=['GET'])
 def save_consent():
     state = request.args["state"]
     redirect_uri = session["redirect_endpoint"]
     policy = request.args["policy"]
+    attributes = request.args["attributes"].split(",")
+
     if state != session["state"]:
         abort(403)
-    ok = request.args["ok"]
+    ok = request.args["consent_status"]
+
+    if ok == "Yes" and not isSubset(session["attr"], attributes):
+        abort(400)
+
     if ok == "Yes":
-        cm.save_consent(Consent(session["id"], policy, None))
+        cm.save_consent(Consent(session["id"], policy, attributes))
         session.clear()
     return redirect(redirect_uri)
 

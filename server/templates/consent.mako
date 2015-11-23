@@ -24,7 +24,16 @@
 
 <div style="clear: both;">
     % for attribute in released_claims:
-        <strong>${_(attribute).capitalize()}</strong><br><pre>    ${released_claims[attribute] | list2str}</pre>
+        <strong>${_(attribute).capitalize()}</strong>
+        <br>
+
+        <div class="attribute">
+            <input type="checkbox"
+                   name="${attribute.lower()}"
+                   value="${released_claims[attribute] | list2str}"
+                   checked>
+            ${released_claims[attribute] | list2str}
+        </div>
     % endfor
 </div>
 <br>
@@ -34,7 +43,8 @@
 </span>
 <br>
 
-<form name="allow_consent" action="/save_consent" method="GET" style="float: left">
+<form name="allow_consent" id="allow_consent_form" action="/save_consent" method="GET"
+      style="float: left">
     <select name="policy" id="policy" class="dropdown-menu-right">
         % for policy in policies:
             <option value="${policy}">${_(policy.lower())}</option>
@@ -42,11 +52,40 @@
     </select>
     <br>
     <br>
-
     <button name="ok" value="Yes" id="submit_ok" type="submit">${_('Ok, accept')}</button>
     <button name="ok" value="No" id="submit_deny" type="submit">${_('No, cancel')}</button>
+    <input type="hidden" id="attributes" name="attributes"/>
+    <input type="hidden" id="consent_status" name="consent_status"/>
     ${extra_inputs()}
 </form>
 <br>
 <br>
 <br>
+
+<script>
+    $('input:checked').each(function () {
+        if (!${select_attributes.lower()}) {
+            $(this).removeAttr("checked")
+        }
+    });
+
+    $('#allow_consent_form').submit(function (ev) {
+        ev.preventDefault(); // to stop the form from submitting
+
+        var attributes = [];
+        $('input:checked').each(function () {
+            attributes.push(this.name);
+        });
+
+        $('#attributes').val(attributes);
+        $('#consent_status').val("No");
+
+        if (attributes.length == 0) {
+            alert("${_('No attributes where selected which equals no consent where given')}");
+        } else {
+            $('#consent_status').val("Yes");
+        }
+
+        this.submit(); // If all the validations succeeded
+    });
+</script>
