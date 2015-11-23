@@ -10,7 +10,7 @@
 .wrapper .title {
     border-top-left-radius: 15px;
     border-top-right-radius: 15px;
-    background-color: orange;
+    background-color: #f46500;
     margin-bottom: 10px;
 }
 
@@ -34,7 +34,6 @@ hr {
     padding: 3px;
     margin-top: 5px;
     border-radius: 4px;
-    background: floralwhite;
     border: 1px darkgrey;
     outline: none;
 }

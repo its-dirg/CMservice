@@ -9,6 +9,10 @@ class ConsentPolicy(Enum):
     month = "month"
     never = "never"
 
+    @staticmethod
+    def to_list():
+        return [e.value for e in ConsentPolicy]
+
     def __str__(self):
         return self._name_
 

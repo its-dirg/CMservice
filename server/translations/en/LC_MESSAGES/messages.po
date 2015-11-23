@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-11-16 15:15+0100\n"
+"POT-Creation-Date: 2015-11-20 12:14+0100\n"
 "PO-Revision-Date: 2015-11-04 12:49+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -27,30 +27,57 @@ msgid "would like to access the following attributes:"
 msgstr "would like to access the following attributes:"
 
 #: templates/consent.mako:34
+msgid ""
+"I which point in time do you want to give consent again for this "
+"particular service:"
+msgstr "I which point in time do you want to give consent again for this "
+"particular service:"
+
+#: templates/consent.mako:52
 msgid "Ok, accept"
 msgstr "Ok, accept"
 
-#: templates/consent.mako:39
+#: templates/consent.mako:57
 msgid "No, cancel"
 msgstr "No, cancel"
 
+#: templates/list_values.mako:1
 msgid "mail"
 msgstr "Email"
 
+#: templates/list_values.mako:2
 msgid "address"
 msgstr "Address"
 
+#: templates/list_values.mako:3
 msgid "name"
 msgstr "Name"
 
+#: templates/list_values.mako:4
 msgid "surname"
 msgstr "Surname"
 
+#: templates/list_values.mako:5
 msgid "givenname"
 msgstr "Given name"
 
+#: templates/list_values.mako:6
 msgid "displayname"
 msgstr "Nickname"
 
+#: templates/list_values.mako:7
 msgid "edupersontargetedid"
 msgstr "User id"
+
+#: templates/list_values.mako:9
+msgid "year"
+msgstr "Year..."
+
+#: templates/list_values.mako:10
+msgid "month"
+msgstr "Month.."
+
+#: templates/list_values.mako:11
+msgid "never"
+msgstr "Never."
+

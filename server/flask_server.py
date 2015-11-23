@@ -5,13 +5,16 @@ import traceback
 from flask.ext.babel import Babel
 from babel.support import LazyProxy
 from flask.ext.mako import MakoTemplates, render_template
+from flask.helpers import send_from_directory
 from jwkest.jwk import rsa_load, RSAKey
 from mako.lookup import TemplateLookup
 from flask import Flask
 from flask import g
 from flask import abort
 from flask import request
+
 from flask import session
+
 from flask import redirect
 
 from cmservice.consent import ConsentPolicy, Consent
@@ -20,7 +23,7 @@ from cmservice.database import ConsentDB
 
 __author__ = 'haho0032'
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='')
 app.config.from_pyfile("settings.cfg")
 mako = MakoTemplates()
 mako.init_app(app)
@@ -48,6 +51,10 @@ def get_locale():
     except:
         pass
 
+
+@app.route('/static/<path:path>')
+def send_js(path):
+    return send_from_directory('static', path)
 
 @app.route("/verify/<id>")
 def verify(id):
@@ -95,14 +102,17 @@ def render_consent(language):
     if not requester_name:
         requester_name = session["requester_name"][0]['text']
 
-    return render_template('consent.mako',
-                           consent_question=None,
-                           state=session["state"],
-                           released_claims=session["attr"],
-                           form_action='/set_language',
-                           name="mako",
-                           language=language,
-                           requester_name=requester_name)
+    return render_template(
+        'consent.mako',
+        consent_question=None,
+        state=session["state"],
+        released_claims=session["attr"],
+        form_action='/set_language',
+        name="mako",
+        language=language,
+        requester_name=requester_name,
+        policies=ConsentPolicy.to_list()
+    )
 
 
 def find_requester_name(language):
@@ -127,11 +137,12 @@ def set_language():
 def save_consent():
     state = request.args["state"]
     redirect_uri = session["redirect_endpoint"]
+    policy = request.args["policy"]
     if state != session["state"]:
         abort(403)
     ok = request.args["ok"]
     if ok == "Yes":
-        cm.save_consent(Consent(session["id"], ConsentPolicy.month, None))
+        cm.save_consent(Consent(session["id"], policy, None))
         session.clear()
     return redirect(redirect_uri)
 
