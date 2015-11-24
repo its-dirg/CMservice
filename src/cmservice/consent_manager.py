@@ -1,8 +1,10 @@
 from datetime import datetime
 import hashlib
+import json
 from time import gmtime, mktime
 
 from jwkest import jws
+
 from jwkest.jwt import JWT
 
 from cmservice.consent import ConsentPolicy
@@ -38,10 +40,10 @@ class ConsentManager(object, metaclass=Singleton):
         :return True if valid consent exists else false
         """
         consent = self.db.get_consent(id)
-        if consent is None:
-            return False
-        # TODO at the moment the user interface don't support policies
-        return not consent.has_expired(policy=self.policy)
+        if consent:
+            if not consent.has_expired(policy=self.policy):
+                return json.dumps(consent.attributes)
+        return None
 
     def verify_ticket(self, ticket: str):
         """

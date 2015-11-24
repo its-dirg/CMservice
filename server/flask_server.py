@@ -7,8 +7,11 @@ from babel.support import LazyProxy
 from flask.ext.mako import MakoTemplates, render_template
 from flask.helpers import send_from_directory
 from jwkest.jwk import rsa_load, RSAKey
+
 from mako.lookup import TemplateLookup
+
 from flask import Flask
+
 from flask import g
 
 from flask import abort
@@ -60,8 +63,9 @@ def send_js(path):
 
 @app.route("/verify/<id>")
 def verify(id):
-    if cm.find_consent(id):
-        return ""
+    attributes = cm.find_consent(id)
+    if attributes:
+        return attributes
     abort(401)
 
 
@@ -87,6 +91,7 @@ def consent():
         session["redirect_endpoint"] = data["redirect_endpoint"]
         session["attr"] = data["attr"]
         session["requester_name"] = data["requester_name"]
+        session["requestor"] = data["requestor"]
 
         return render_consent(language=request.accept_languages.best_match(['sv', 'en']))
     except Exception as ex:
@@ -155,7 +160,12 @@ def save_consent():
         abort(400)
 
     if ok == "Yes":
-        cm.save_consent(Consent(session["id"], policy, attributes))
+        consent_question = Consent.generate_question_hash(
+            session["id"],
+            selected_attribute_dict=session["attr"],
+            entity_id=session["requestor"]
+        )
+        cm.save_consent(Consent(session["id"], policy, attributes, consent_question))
         session.clear()
     return redirect(redirect_uri)
 

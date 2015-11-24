@@ -1,6 +1,7 @@
 from enum import Enum
 from calendar import monthrange
 from datetime import datetime, timedelta
+import hashlib
 import json
 
 
@@ -33,7 +34,8 @@ def format_datetime(datetime: datetime, format=None) -> datetime:
 
 
 class Consent(object):
-    def __init__(self, id: str, policy: ConsentPolicy, attributes: list, timestamp: datetime=None):
+    def __init__(self, id: str, policy: ConsentPolicy, attributes: list, question_hash: str,
+                 timestamp: datetime=None):
         """
 
         :param id: Identifier for the consent
@@ -48,6 +50,7 @@ class Consent(object):
         self.timestamp = format_datetime(timestamp)
         self.policy = policy
         self.attributes = attributes
+        self.question_hash = question_hash
 
     @staticmethod
     def from_dict(dict: dict):
@@ -60,7 +63,8 @@ class Consent(object):
             timestamp = datetime.strptime(dict['timestamp'], TIME_PATTERN)
             policy = ConsentPolicy(dict['policy'])
             attributes = json.loads(dict['attributes'])
-            return Consent(id, policy, attributes, timestamp=timestamp)
+            question_hash = dict['question_hash']
+            return Consent(id, policy, attributes, question_hash, timestamp=timestamp)
         except TypeError:
             return None
 
@@ -72,7 +76,8 @@ class Consent(object):
             'consent_id': self.id,
             'timestamp': self.timestamp.strftime(TIME_PATTERN),
             'policy': str(self.policy),
-            'attributes': json.dumps(self.attributes)
+            'attributes': json.dumps(self.attributes),
+            'question_hash': self.question_hash
         }
 
     def __eq__(self, other) -> bool:
@@ -85,7 +90,8 @@ class Consent(object):
             self.id == other.id and
             self.timestamp == other.timestamp,
             self.policy == other.policy,
-            self.attributes == other.attributes
+            self.attributes == other.attributes,
+            self.question_hash == other.question_hash
         )
 
     def get_current_time(self) -> datetime:
@@ -128,6 +134,10 @@ class Consent(object):
                 break
         return delta
 
+    @staticmethod
+    def generate_question_hash(id: str, selected_attribute_dict: dict, entity_id: str) -> str:
+        id_string = "%s%s%s" % (id, json.dumps(selected_attribute_dict), entity_id)
+        return hashlib.sha512(id_string.encode("utf-8")).hexdigest().encode("utf-8")
 
 class StartDateInFuture(Exception):
     pass

@@ -52,8 +52,9 @@
     </select>
     <br>
     <br>
-    <button name="ok" value="Yes" id="submit_ok" type="submit">${_('Ok, accept')}</button>
-    <button name="ok" value="No" id="submit_deny" type="submit">${_('No, cancel')}</button>
+    <input name="Yes" value="${_('Ok, accept')}" id="submit_ok" type="submit">
+    <input name="No" value="${_('No, cancel')}" id="submit_deny" type="submit">
+
     <input type="hidden" id="attributes" name="attributes"/>
     <input type="hidden" id="consent_status" name="consent_status"/>
     ${extra_inputs()}
@@ -78,14 +79,19 @@
         });
 
         $('#attributes').val(attributes);
-        $('#consent_status').val("No");
+        var status = $("input[type=submit][clicked=true]").attr("name");
+        $('#consent_status').val(status);
 
         if (attributes.length == 0) {
+            $('#consent_status').val("No");
             alert("${_('No attributes where selected which equals no consent where given')}");
-        } else {
-            $('#consent_status').val("Yes");
         }
 
         this.submit(); // If all the validations succeeded
+    });
+
+    $("form input[type=submit]").click(function () {
+        $("input[type=submit]", $(this).parents("form")).removeAttr("clicked");
+        $(this).attr("clicked", "true");
     });
 </script>

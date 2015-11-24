@@ -18,7 +18,7 @@ class TestConsentDB():
         self.data = TicketData({"asd": "asd"}, timestamp=self.time)
         self.consent_id = "id_123"
         self.attibutes = ["name", "email"]
-        self.consent = Consent(self.consent_id, ConsentPolicy.month, self.attibutes,
+        self.consent = Consent(self.consent_id, ConsentPolicy.month, self.attibutes, "",
                                timestamp=self.time)
 
     @pytest.mark.parametrize("database", [
@@ -56,7 +56,7 @@ class TestConsentDB():
     @patch('cmservice.consent.Consent.get_current_time')
     def test_if_nothing_is_return_if_policy_has_expired(self, get_current_time, start_time,
                                                         current_time, policy):
-        consent = Consent(self.consent_id, policy, self.attibutes, timestamp=start_time)
+        consent = Consent(self.consent_id, policy, self.attibutes, "", timestamp=start_time)
         get_current_time.return_value = current_time
         database = SQLite3ConsentDB()
         database.save_consent(consent)
@@ -70,7 +70,7 @@ class TestConsentDB():
     @patch('cmservice.consent.Consent.get_current_time')
     def test_if_policy_has_not_yet_expired(self, get_current_time, start_time, current_time,
                                            policy):
-        consent = Consent(self.consent_id, policy, self.attibutes, timestamp=start_time)
+        consent = Consent(self.consent_id, policy, self.attibutes, "", timestamp=start_time)
         get_current_time.return_value = current_time
         database = SQLite3ConsentDB()
         database.save_consent(consent)
@@ -88,7 +88,8 @@ class TestConsentDB():
         consent = Consent(
             self.consent_id,
             ConsentPolicy.never,
-            None
+            None,
+            ""
         )
         database.save_consent(consent)
         assert database.get_consent(self.consent_id) == consent
