@@ -7,6 +7,9 @@ from cmservice.ticket_data import TicketData
 class ConsentDB(object):
     """This is a base class that defines the method that must be implemented to keep state"""
 
+    def __init__(self, max_month):
+        self.max_month = max_month
+
     def save_consent(self, consent: Consent):
         """
         Will save a consent.
@@ -52,7 +55,8 @@ class ConsentDB(object):
 
 
 class DictConsentDB(ConsentDB):
-    def __init__(self):
+    def __init__(self, max_month):
+        super(DictConsentDB, self).__init__(max_month)
         self.c_db = {}
         self.tickets = {}
 
@@ -109,7 +113,8 @@ class SQLite3ConsentDB(ConsentDB):
     CONSENT_TABLE_NAME = 'consent'
     TICKET_TABLE_NAME = 'ticket'
 
-    def __init__(self, database_path=None):
+    def __init__(self, max_month, database_path=None):
+        super(SQLite3ConsentDB, self).__init__(max_month)
         self.c_db = dataset.connect('sqlite:///:memory:')
         if database_path:
             self.c_db = dataset.connect('sqlite:///' + database_path)
@@ -145,7 +150,7 @@ class SQLite3ConsentDB(ConsentDB):
         result = self.consent_table.find_one(consent_id=id)
         consent = Consent.from_dict(result)
         if consent:
-            if consent.has_expired():
+            if consent.has_expired(self.max_month):
                 self.remove_consent(id)
                 return None
         return consent

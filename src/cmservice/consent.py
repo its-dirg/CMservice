@@ -1,22 +1,7 @@
-from enum import Enum
 from calendar import monthrange
 from datetime import datetime, timedelta
 import hashlib
 import json
-
-
-class ConsentPolicy(Enum):
-    year = "year"
-    month = "month"
-    never = "never"
-
-    @staticmethod
-    def to_list():
-        return [e.value for e in ConsentPolicy]
-
-    def __str__(self):
-        return self._name_
-
 
 TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
@@ -34,7 +19,7 @@ def format_datetime(datetime: datetime, format=None) -> datetime:
 
 
 class Consent(object):
-    def __init__(self, id: str, policy: ConsentPolicy, attributes: list, question_hash: str,
+    def __init__(self, id: str, attributes: list, question_hash: str, month: int,
                  timestamp: datetime=None):
         """
 
@@ -48,9 +33,9 @@ class Consent(object):
             timestamp = datetime.now()
         self.id = id
         self.timestamp = format_datetime(timestamp)
-        self.policy = policy
         self.attributes = attributes
         self.question_hash = question_hash
+        self.month = month
 
     @staticmethod
     def from_dict(dict: dict):
@@ -61,10 +46,10 @@ class Consent(object):
         try:
             id = dict['consent_id']
             timestamp = datetime.strptime(dict['timestamp'], TIME_PATTERN)
-            policy = ConsentPolicy(dict['policy'])
+            month = dict['month']
             attributes = json.loads(dict['attributes'])
             question_hash = dict['question_hash']
-            return Consent(id, policy, attributes, question_hash, timestamp=timestamp)
+            return Consent(id, attributes, question_hash, month, timestamp=timestamp)
         except TypeError:
             return None
 
@@ -75,7 +60,7 @@ class Consent(object):
         return {
             'consent_id': self.id,
             'timestamp': self.timestamp.strftime(TIME_PATTERN),
-            'policy': str(self.policy),
+            'month': self.month,
             'attributes': json.dumps(self.attributes),
             'question_hash': self.question_hash
         }
@@ -89,7 +74,7 @@ class Consent(object):
             isinstance(other, self.__class__) and
             self.id == other.id and
             self.timestamp == other.timestamp,
-            self.policy == other.policy,
+            self.month == other.month,
             self.attributes == other.attributes,
             self.question_hash == other.question_hash
         )
@@ -100,17 +85,10 @@ class Consent(object):
         """
         return datetime.now()
 
-    def has_expired(self, policy=None):
-        if not policy:
-            policy = self.policy
-
+    def has_expired(self, max_months):
         current_date = self.get_current_time()
-        if policy == ConsentPolicy.never:
-            return False
-        elif policy == ConsentPolicy.month and Consent.monthdelta(self.timestamp,
-                                                                  current_date) >= 1:
-            return True
-        if policy == ConsentPolicy.year and Consent.monthdelta(self.timestamp, current_date) >= 12:
+        if ((Consent.monthdelta(self.timestamp, current_date) > max_months) or
+                (Consent.monthdelta(self.timestamp, current_date) > self.month)):
             return True
         return False
 

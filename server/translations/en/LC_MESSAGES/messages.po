@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-11-23 09:55+0100\n"
+"POT-Creation-Date: 2015-11-25 10:28+0100\n"
 "PO-Revision-Date: 2015-11-04 12:49+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -26,23 +26,24 @@ msgstr "Consent - Your consent is required to continue."
 msgid "would like to access the following attributes:"
 msgstr "would like to access the following attributes:"
 
-#: templates/consent.mako:41
+#: templates/consent.mako:42
+#, fuzzy
 msgid ""
-"I which point in time do you want to give consent again for this "
-"particular service:"
+"For how many month do you want to give consent for this particular "
+"service:"
 msgstr ""
-"I which point in time do you want to give consent again for this "
-"particular service:"
+"For how many month do you want to give consent for this particular "
+"service:"
 
-#: templates/consent.mako:54
+#: templates/consent.mako:55
 msgid "Ok, accept"
 msgstr "Ok, accept"
 
-#: templates/consent.mako:55
+#: templates/consent.mako:56
 msgid "No, cancel"
 msgstr "No, cancel"
 
-#: templates/consent.mako:73
+#: templates/consent.mako:87
 msgid "No attributes where selected which equals no consent where given"
 msgstr "No attributes where selected which equals no consent where given"
 

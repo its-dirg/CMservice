@@ -7,7 +7,6 @@ from jwkest import jws
 
 from jwkest.jwt import JWT
 
-from cmservice.consent import ConsentPolicy
 from cmservice.database import ConsentDB
 from cmservice.ticket_data import TicketData
 
@@ -22,7 +21,7 @@ class Singleton(type):
 
 
 class ConsentManager(object, metaclass=Singleton):
-    def __init__(self, db: ConsentDB, policy: ConsentPolicy, keys: list, ticket_ttl: int):
+    def __init__(self, db: ConsentDB, keys: list, ticket_ttl: int, max_month: int):
         """
         :param db:
         :param policy:
@@ -30,18 +29,18 @@ class ConsentManager(object, metaclass=Singleton):
         :param ticket_ttl: How long the ticket should live in seconds.
         """
         self.db = db
-        self.policy = policy
         self.keys = keys
         self.ticket_ttl = ticket_ttl
+        self.max_month = max_month
 
-    def find_consent(self, id: int):
+    def find_consent(self, id: str):
         """
         :param id: Identifier for a given consent
         :return True if valid consent exists else false
         """
         consent = self.db.get_consent(id)
         if consent:
-            if not consent.has_expired(policy=self.policy):
+            if not consent.has_expired(self.max_month):
                 return json.dumps(consent.attributes)
         return None
 

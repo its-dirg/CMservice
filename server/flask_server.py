@@ -6,6 +6,7 @@ from flask.ext.babel import Babel
 from babel.support import LazyProxy
 from flask.ext.mako import MakoTemplates, render_template
 from flask.helpers import send_from_directory
+
 from jwkest.jwk import rsa_load, RSAKey
 
 from mako.lookup import TemplateLookup
@@ -22,7 +23,7 @@ from flask import session
 
 from flask import redirect
 
-from cmservice.consent import ConsentPolicy, Consent
+from cmservice.consent import Consent
 from cmservice.consent_manager import ConsentManager
 from cmservice.database import ConsentDB
 
@@ -118,7 +119,7 @@ def render_consent(language):
         name="mako",
         language=language,
         requester_name=requester_name,
-        policies=ConsentPolicy.to_list(),
+        months=app.config["USER_CONSENT_EXPIRATION_MONTH"],
         select_attributes=str(app.config["AUTO_SELECT_ATTRIBUTES"])
     )
 
@@ -149,7 +150,7 @@ def isSubset(list_, sub_list):
 def save_consent():
     state = request.args["state"]
     redirect_uri = session["redirect_endpoint"]
-    policy = request.args["policy"]
+    month = request.args["month"]
     attributes = request.args["attributes"].split(",")
 
     if state != session["state"]:
@@ -165,7 +166,8 @@ def save_consent():
             selected_attribute_dict=session["attr"],
             entity_id=session["requestor"]
         )
-        cm.save_consent(Consent(session["id"], policy, attributes, consent_question))
+        consent = Consent(session["id"], attributes, consent_question, int(month))
+        cm.save_consent(consent)
         session.clear()
     return redirect(redirect_uri)
 
@@ -197,8 +199,12 @@ if __name__ == "__main__":
     database_class = import_database_class()
     if not issubclass(database_class, ConsentDB):
         raise MustInheritFromConsentDB("%s does not inherit from ConsentDB" % database_class)
-    database = database_class(*app.config['DATABASE_CLASS_PARAMETERS'])
-    cm = ConsentManager(database, ConsentPolicy.month, keys, app.config["TICKET_TTL"])
+    database = database_class(
+        app.config['MAX_CONSENT_EXPIRATION_MONTH'],
+        *app.config['DATABASE_CLASS_PARAMETERS']
+    )
+    cm = ConsentManager(database, keys, app.config["TICKET_TTL"],
+                        app.config["MAX_CONSENT_EXPIRATION_MONTH"])
     app.secret_key = app.config['SECRET_SESSION_KEY']
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'],
             ssl_context=context)

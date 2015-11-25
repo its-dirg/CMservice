@@ -39,15 +39,15 @@
 <br>
 
 <span style="float: left;">
-    ${_("I which point in time do you want to give consent again for this particular service:")}
+    ${_("For how many month do you want to give consent for this particular service:")}
 </span>
 <br>
 
 <form name="allow_consent" id="allow_consent_form" action="/save_consent" method="GET"
       style="float: left">
-    <select name="policy" id="policy" class="dropdown-menu-right">
-        % for policy in policies:
-            <option value="${policy}">${_(policy.lower())}</option>
+    <select name="month" id="month" class="dropdown-menu-right">
+        % for month in months:
+            <option value="${month}">${month}</option>
         % endfor
     </select>
     <br>
