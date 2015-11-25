@@ -1,4 +1,5 @@
 from importlib import import_module
+import logging
 from uuid import uuid4
 import traceback
 
@@ -6,31 +7,32 @@ from flask.ext.babel import Babel
 from babel.support import LazyProxy
 from flask.ext.mako import MakoTemplates, render_template
 from flask.helpers import send_from_directory
-
 from jwkest.jwk import rsa_load, RSAKey
-
 from mako.lookup import TemplateLookup
 
 from flask import Flask
 
 from flask import g
-
 from flask import abort
-
 from flask import request
-
 from flask import session
-
 from flask import redirect
 
 from cmservice.consent import Consent
 from cmservice.consent_manager import ConsentManager
 from cmservice.database import ConsentDB
 
-__author__ = 'haho0032'
-
 app = Flask(__name__, static_url_path='')
 app.config.from_pyfile("settings.cfg")
+
+LOGGER = logging.getLogger("")
+LOGFILE_NAME = app.config['LOGGING_FILE']
+hdlr = logging.FileHandler(LOGFILE_NAME)
+base_formatter = logging.Formatter("[%(asctime)-19.19s] [%(levelname)-5.5s]: %(message)s")
+hdlr.setFormatter(base_formatter)
+hdlr.setLevel(app.config['LOGGING_LEVEL'])
+LOGGER.addHandler(hdlr)
+
 mako = MakoTemplates()
 mako.init_app(app)
 app._mako_lookup = TemplateLookup(directories=["templates"],
@@ -185,7 +187,6 @@ class MustInheritFromConsentDB(Exception):
 
 if __name__ == "__main__":
     import ssl
-
     context = None
     if app.config['SSL']:
         context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
@@ -206,5 +207,6 @@ if __name__ == "__main__":
     cm = ConsentManager(database, keys, app.config["TICKET_TTL"],
                         app.config["MAX_CONSENT_EXPIRATION_MONTH"])
     app.secret_key = app.config['SECRET_SESSION_KEY']
+    print("CMservice running at %s:%s" % (app.config['HOST'], app.config['PORT']))
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'],
             ssl_context=context)

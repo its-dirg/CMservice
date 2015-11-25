@@ -2,7 +2,9 @@ from calendar import monthrange
 from datetime import datetime, timedelta
 import hashlib
 import json
+import logging
 
+LOGGER = logging.getLogger(__name__)
 TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
 
@@ -51,6 +53,7 @@ class Consent(object):
             question_hash = dict['question_hash']
             return Consent(id, attributes, question_hash, month, timestamp=timestamp)
         except TypeError:
+            LOGGER.warning("Failed to create consent object from dict: %s" % dict)
             return None
 
     def to_dict(self):

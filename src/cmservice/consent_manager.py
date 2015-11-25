@@ -1,6 +1,7 @@
 from datetime import datetime
 import hashlib
 import json
+import logging
 from time import gmtime, mktime
 
 from jwkest import jws
@@ -10,6 +11,7 @@ from jwkest.jwt import JWT
 from cmservice.database import ConsentDB
 from cmservice.ticket_data import TicketData
 
+LOGGER = logging.getLogger(__name__)
 
 class Singleton(type):
     _instances = {}
@@ -96,6 +98,7 @@ class ConsentManager(object, metaclass=Singleton):
             self.db.remove_ticket(ticket)
             return ticketdata.data
         except:
+            LOGGER.warning("Falied to retrive ticket data from ticket: %s" % ticket)
             return None
 
     def save_consent(self, consent):

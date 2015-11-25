@@ -1,8 +1,10 @@
 from datetime import datetime
 import json
+import logging
 
 from cmservice.consent import format_datetime, TIME_PATTERN
 
+LOGGER = logging.getLogger(__name__)
 
 class TicketData(object):
     def __init__(self, data: dict, timestamp: datetime=None):
@@ -26,6 +28,7 @@ class TicketData(object):
             data = _dict['data']
             return TicketData(json.loads(data), timestamp=timestamp)
         except TypeError:
+            LOGGER.warning("Failed to create TicketData object from dictionary: %s" % _dict)
             return None
 
     def to_dict(self):
