@@ -54,3 +54,6 @@ class TestConsent():
         consent = Consent("id", None, "", 1, timestamp=start_date)
         with pytest.raises(StartDateInFuture):
             consent.has_expired(999)
+
+    def test_returns_none_when_dict_is_none(self):
+        assert Consent.from_dict(None) == None

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-11-25 10:28+0100\n"
+"POT-Creation-Date: 2015-11-30 09:22+0100\n"
 "PO-Revision-Date: 2015-11-04 12:49+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: sv_SE\n"
@@ -27,10 +27,7 @@ msgid "would like to access the following attributes:"
 msgstr "vill få tillgång till följande attribut:"
 
 #: templates/consent.mako:42
-#, fuzzy
-msgid ""
-"For how many month do you want to give consent for this particular "
-"service:"
+msgid "For how many month do you want to give consent for this particular service:"
 msgstr "För hur många månader vill du ge samtycke for den angivna tjänsten:"
 
 #: templates/consent.mako:55
@@ -43,9 +40,7 @@ msgstr "Nej, avbryt"
 
 #: templates/consent.mako:87
 msgid "No attributes where selected which equals no consent where given"
-msgstr ""
-"Inga attribut har angets, vilket är equivalent med att inte ge samtycke "
-"överhuvudtaget"
+msgstr "Inga attribut har angets, vilket är equivalent med att inte ge samtycke överhuvudtaget"
 
 #: templates/list_values.mako:1
 msgid "mail"

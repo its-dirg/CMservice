@@ -53,6 +53,13 @@ class ConsentDB(object):
         """
         raise NotImplementedError("Must be implemented!")
 
+    def remove_consent(self, id: str):
+        """
+        Removes a consent from the database.
+
+        :param id: A consent id.
+        """
+        raise NotImplementedError("Must be implemented!")
 
 class DictConsentDB(ConsentDB):
     def __init__(self, max_month):
@@ -86,6 +93,10 @@ class DictConsentDB(ConsentDB):
         """
         if id not in self.c_db:
             return None
+        consent = self.c_db[id]
+        if consent.has_expired(self.max_month):
+            self.remove_consent(id)
+            return None
         return self.c_db[id]
 
     def get_ticketdata(self, ticket: str) -> TicketData:
@@ -108,6 +119,13 @@ class DictConsentDB(ConsentDB):
         if ticket in self.tickets:
             self.tickets.pop(ticket)
 
+    def remove_consent(self, id: str):
+        """
+        Removes a consent from the database.
+
+        :param id: The identification for a consent.
+        """
+        del self.c_db[id]
 
 class SQLite3ConsentDB(ConsentDB):
     CONSENT_TABLE_NAME = 'consent'
