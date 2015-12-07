@@ -5,7 +5,6 @@ import logging
 from time import gmtime, mktime
 
 from jwkest import jws
-
 from jwkest.jwt import JWT
 
 from cmservice.database import ConsentDB
@@ -58,8 +57,6 @@ class ConsentManager(object, metaclass=Singleton):
 
     def save_consent_req(self, jwt: str):
         """
-        Verifies if the ticket is valid and removes it from the database.
-
         :param jwt: JWT represented as a string
         """
         self.verify_jwt(jwt)
