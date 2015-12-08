@@ -1,3 +1,4 @@
+import copy
 from importlib import import_module
 import logging
 from uuid import uuid4
@@ -93,6 +94,7 @@ def consent():
         session["state"] = uuid4().urn
         session["redirect_endpoint"] = data["redirect_endpoint"]
         session["attr"] = data["attr"]
+        session["locked_attr"] = data["locked_attr"]
         session["requester_name"] = data["requester_name"]
         session["requestor"] = data["requestor"]
 
@@ -112,11 +114,22 @@ def render_consent(language):
     if not requester_name:
         requester_name = session["requester_name"][0]['text']
 
+    locked_attr = session["locked_attr"]
+    if not isinstance(locked_attr, list):
+        locked_attr = [locked_attr]
+
+    released_claims = copy.deepcopy(session["attr"])
+    locked_claims = {}
+    for l_attr in locked_attr:
+        locked_claims[l_attr] = released_claims[l_attr]
+        del released_claims[l_attr]
+
     return render_template(
         'consent.mako',
         consent_question=None,
         state=session["state"],
-        released_claims=session["attr"],
+        released_claims=released_claims,
+        locked_claims=locked_claims,
         form_action='/set_language',
         name="mako",
         language=language,
