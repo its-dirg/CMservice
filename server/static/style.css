@@ -51,3 +51,21 @@ hr {
     word-break: break-all;
     word-wrap: break-word;
 }
+
+.locked_attr_div .attr_header{
+    color: #7F7F7F;
+}
+
+.locked_attribute {
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #7F7F7F;
+    display: block;
+    font-size: 13px;
+    line-height: 1.42857;
+    margin: 0 0 10px;
+    padding: 9.5px;
+    word-break: break-all;
+    word-wrap: break-word;
+}

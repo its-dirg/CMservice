@@ -36,6 +36,22 @@
         </div>
     % endfor
 </div>
+
+% if locked_claims:
+
+<div style="clear: both;" class="locked_attr_div">
+    <hr>
+    <h3>${_("Locked attributes")}</h3>
+    <p>${_("The following attributes is not optional. If you don't want to send these you need to abort.")}</p>
+    % for attribute in locked_claims:
+        <strong class="attr_header">${_(attribute).capitalize()}</strong>
+        <br>
+        <div class="locked_attribute">
+            ${locked_claims[attribute] | list2str}
+        </div>
+    % endfor
+</div>
+% endif
 <br>
 
 <span style="float: left;">
@@ -78,14 +94,20 @@
             attributes.push(this.name);
         });
 
-        $('#attributes').val(attributes);
+        var consent_status = $('#consent_status');
+
         var status = $("input[type=submit][clicked=true]").attr("name");
-        $('#consent_status').val(status);
+        consent_status.val(status);
 
         if (attributes.length == 0) {
-            $('#consent_status').val("No");
+            consent_status.val("No");
             alert("${_('No attributes where selected which equals no consent where given')}");
         }
+
+        % for attr in locked_claims:
+            attributes.push("${attr}");
+        % endfor
+        $('#attributes').val(attributes);
 
         this.submit(); // If all the validations succeeded
     });
