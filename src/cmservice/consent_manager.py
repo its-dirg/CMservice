@@ -5,9 +5,10 @@ import logging
 from time import gmtime, mktime
 
 from jwkest import jws
+
 from jwkest.jwt import JWT
 
-from cmservice.database import ConsentDB
+from cmservice.database import ConsentDB, TicketDB
 from cmservice.ticket_data import TicketData
 
 LOGGER = logging.getLogger(__name__)
@@ -22,14 +23,17 @@ class Singleton(type):
 
 
 class ConsentManager(object, metaclass=Singleton):
-    def __init__(self, db: ConsentDB, keys: list, ticket_ttl: int, max_month: int):
+    def __init__(self, consent_db: ConsentDB, ticket_db: TicketDB, keys: list, ticket_ttl: int,
+                 max_month: int):
         """
-        :param db:
-        :param policy:
+        :param consent_db: database in which the consent information is stored
+        :param ticket_db: database in which the ticket information is stored
         :param keys: Public keys to verify JWT signature.
         :param ticket_ttl: How long the ticket should live in seconds.
+        :param max_month: For how long the consent should be valid
         """
-        self.db = db
+        self.consent_db = consent_db
+        self.ticket_db = ticket_db
         self.keys = keys
         self.ticket_ttl = ticket_ttl
         self.max_month = max_month
@@ -39,7 +43,7 @@ class ConsentManager(object, metaclass=Singleton):
         :param id: Identifier for a given consent
         :return True if valid consent exists else false
         """
-        consent = self.db.get_consent(id)
+        consent = self.consent_db.get_consent(id)
         if consent:
             if not consent.has_expired(self.max_month):
                 return json.dumps(consent.attributes)
@@ -51,9 +55,9 @@ class ConsentManager(object, metaclass=Singleton):
 
         :param ticket: Identifier for a ticket
         """
-        data = self.db.get_ticketdata(ticket)
+        data = self.ticket_db.get_ticketdata(ticket)
         if (datetime.now()-data.timestamp).total_seconds() > self.ticket_ttl:
-            self.db.remove_ticket(ticket)
+            self.ticket_db.remove_ticket(ticket)
 
     def save_consent_req(self, jwt: str):
         """
@@ -63,7 +67,7 @@ class ConsentManager(object, metaclass=Singleton):
         jso = self.unpack_jwt(jwt)
         ticket = hashlib.sha256((jwt + str(mktime(gmtime()))).encode("UTF-8")).hexdigest()
         data = TicketData(jso)
-        self.db.save_consent_request(ticket, data)
+        self.ticket_db.save_consent_request(ticket, data)
         return ticket
 
     def verify_jwt(self, jwt: str):
@@ -91,8 +95,8 @@ class ConsentManager(object, metaclass=Singleton):
         :return: Information about the consent request
         """
         try:
-            ticketdata = self.db.get_ticketdata(ticket)
-            self.db.remove_ticket(ticket)
+            ticketdata = self.ticket_db.get_ticketdata(ticket)
+            self.ticket_db.remove_ticket(ticket)
             return ticketdata.data
         except:
             LOGGER.warning("Falied to retrive ticket data from ticket: %s" % ticket)
@@ -102,4 +106,4 @@ class ConsentManager(object, metaclass=Singleton):
         """
         :param consent: The consent object to store
         """
-        self.db.save_consent(consent)
+        self.consent_db.save_consent(consent)

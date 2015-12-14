@@ -1,15 +1,17 @@
 import datetime
+import tempfile
 from unittest.mock import patch
 
 import pytest
 
 from cmservice.consent import Consent
-from cmservice.database import DictConsentDB, SQLite3ConsentDB
+from cmservice.database import DictConsentDB, SQLite3ConsentDB, DictTicketDB, SQLite3TicketDB
 from cmservice.ticket_data import TicketData
 
 __author__ = 'danielevertsson'
 
-DATABASES = [DictConsentDB(999), SQLite3ConsentDB(999)]
+CONSENT_DATABASES = [DictConsentDB(999), SQLite3ConsentDB(999)]
+TICKET_DATABASES = [DictTicketDB(), SQLite3TicketDB()]
 
 class TestConsentDB():
     @pytest.fixture(autouse=True)
@@ -22,23 +24,23 @@ class TestConsentDB():
         self.consent = Consent(self.consent_id, self.attibutes, "", 1,
                                timestamp=self.time)
 
-    @pytest.mark.parametrize("database", DATABASES)
+    @pytest.mark.parametrize("database", CONSENT_DATABASES)
     def test_save_consent(self, database):
         database.save_consent(self.consent)
         assert self.consent == database.get_consent(self.consent_id)
 
-    @pytest.mark.parametrize("database", DATABASES)
+    @pytest.mark.parametrize("database", TICKET_DATABASES)
     def test_save_consent_request(self, database):
         database.save_consent_request(self.ticket, self.data)
         assert self.data == database.get_ticketdata(self.ticket)
 
-    @pytest.mark.parametrize("database", DATABASES)
+    @pytest.mark.parametrize("database", TICKET_DATABASES)
     def test_remove_ticket(self, database):
         database.save_consent_request(self.ticket, self.data)
         database.remove_ticket(self.ticket)
         assert not database.get_ticketdata(self.ticket)
 
-    @pytest.mark.parametrize("database", DATABASES)
+    @pytest.mark.parametrize("database", CONSENT_DATABASES)
     @patch('cmservice.consent.Consent.get_current_time')
     def test_if_nothing_is_return_if_policy_has_expired(self, get_current_time, database):
         parameters = [
@@ -51,7 +53,7 @@ class TestConsentDB():
             database.save_consent(consent)
             assert not database.get_consent(self.consent_id)
 
-    @pytest.mark.parametrize("database", DATABASES)
+    @pytest.mark.parametrize("database", CONSENT_DATABASES)
     @patch('cmservice.consent.Consent.get_current_time')
     def test_if_policy_has_not_yet_expired(self, get_current_time, database):
         parameters = [
@@ -81,3 +83,19 @@ class TestConsentDB():
         )
         database.save_consent(consent)
         assert database.get_consent(self.consent_id) == consent
+
+    def test_store_consent_in_file_and_ticket_in_memory(self):
+        consent_id = "id1"
+        tmp_file = tempfile.NamedTemporaryFile()
+        consent_db = SQLite3ConsentDB(1, tmp_file.name)
+        consent_db.save_consent(Consent(consent_id, ["attr1"], "question_hash", month=1))
+        assert consent_db.size() == 1
+
+        ticket_db = DictTicketDB()
+        ticket_db.save_consent_request("ticket1", TicketData({}))
+        assert ticket_db.size() == 1
+
+        ticket_db = DictTicketDB()
+        consent_db = SQLite3ConsentDB(1, tmp_file.name)
+        assert ticket_db.size() == 0
+        assert consent_db.size() == 1

@@ -9,9 +9,7 @@ from flask.ext.mako import MakoTemplates, render_template
 from flask.helpers import send_from_directory
 from jwkest.jwk import rsa_load, RSAKey
 from mako.lookup import TemplateLookup
-
 from flask import Flask
-
 from flask import g
 from flask import abort
 from flask import request
@@ -20,7 +18,7 @@ from flask import redirect
 
 from cmservice.consent import Consent
 from cmservice.consent_manager import ConsentManager
-from cmservice.database import ConsentDB
+from cmservice.database import ConsentDB, TicketDB
 
 app = Flask(__name__, static_url_path='')
 app.config.from_pyfile("settings.cfg")
@@ -174,9 +172,8 @@ def save_consent():
     return redirect(redirect_uri)
 
 
-def import_database_class():
-    db_module = app.config['DATABASE_CLASS_PATH']
-    path, _class = db_module.rsplit('.', 1)
+def import_database_class(db_module_name):
+    path, _class = db_module_name.rsplit('.', 1)
     module = import_module(path)
     database_class = getattr(module, _class)
     return database_class
@@ -184,6 +181,29 @@ def import_database_class():
 
 class MustInheritFromConsentDB(Exception):
     pass
+
+
+def load_consent_db_class():
+    consent_database_class = import_database_class(app.config['CONSENT_DATABASE_CLASS_PATH'])
+    if not issubclass(consent_database_class, ConsentDB):
+        raise MustInheritFromConsentDB(
+            "%s does not inherit from ConsentDB" % consent_database_class)
+    consent_db = consent_database_class(
+        app.config['MAX_CONSENT_EXPIRATION_MONTH'],
+        *app.config['CONSENT_DATABASE_CLASS_PARAMETERS']
+    )
+    return consent_db
+
+
+def load_ticket_db_class():
+    ticket_database_class = import_database_class(app.config['TICKET_DATABASE_CLASS_PATH'])
+    if not issubclass(ticket_database_class, TicketDB):
+        raise MustInheritFromConsentDB("%s does not inherit from TicketDB" % ticket_database_class)
+    ticket_db = ticket_database_class(
+        *app.config['TICKET_DATABASE_CLASS_PARAMETERS']
+    )
+    return ticket_db
+
 
 if __name__ == "__main__":
     import ssl
@@ -197,14 +217,11 @@ if __name__ == "__main__":
         pub_key = RSAKey().load_key(_bkey)
         keys.append(pub_key)
     global cm
-    database_class = import_database_class()
-    if not issubclass(database_class, ConsentDB):
-        raise MustInheritFromConsentDB("%s does not inherit from ConsentDB" % database_class)
-    database = database_class(
-        app.config['MAX_CONSENT_EXPIRATION_MONTH'],
-        *app.config['DATABASE_CLASS_PARAMETERS']
-    )
-    cm = ConsentManager(database, keys, app.config["TICKET_TTL"],
+
+    consent_db = load_consent_db_class()
+    ticket_db = load_ticket_db_class()
+
+    cm = ConsentManager(consent_db, ticket_db, keys, app.config["TICKET_TTL"],
                         app.config["MAX_CONSENT_EXPIRATION_MONTH"])
     app.secret_key = app.config['SECRET_SESSION_KEY']
     print("CMservice running at %s:%s" % (app.config['HOST'], app.config['PORT']))
