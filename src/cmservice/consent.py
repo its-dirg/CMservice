@@ -1,6 +1,5 @@
 from calendar import monthrange
 from datetime import datetime, timedelta
-import hashlib
 import json
 import logging
 
@@ -21,13 +20,12 @@ def format_datetime(datetime: datetime, format=None) -> datetime:
 
 
 class Consent(object):
-    def __init__(self, id: str, attributes: list, question_hash: str, month: int,
-                 timestamp: datetime=None):
+    def __init__(self, id: str, attributes: list, month: int, timestamp: datetime=None):
         """
 
         :param id: Identifier for the consent
         :param timestamp: Datetime for when the consent where created
-        :param policy: The policy for how long the
+        :param month: The policy for how long the
         :param attributes: A list of attribute for which the user has given consent. None equals
                that consent has been given for all attributes
         """
@@ -36,7 +34,6 @@ class Consent(object):
         self.id = id
         self.timestamp = format_datetime(timestamp)
         self.attributes = attributes
-        self.question_hash = question_hash
         self.month = month
 
     @staticmethod
@@ -50,8 +47,7 @@ class Consent(object):
             timestamp = datetime.strptime(dict['timestamp'], TIME_PATTERN)
             month = dict['month']
             attributes = json.loads(dict['attributes'])
-            question_hash = dict['question_hash']
-            return Consent(id, attributes, question_hash, month, timestamp=timestamp)
+            return Consent(id, attributes, month, timestamp=timestamp)
         except TypeError:
             LOGGER.warning("Failed to create consent object from dict: %s" % dict)
             return None
@@ -65,7 +61,6 @@ class Consent(object):
             'timestamp': self.timestamp.strftime(TIME_PATTERN),
             'month': self.month,
             'attributes': json.dumps(self.attributes),
-            'question_hash': self.question_hash
         }
 
     def __eq__(self, other) -> bool:
@@ -79,7 +74,6 @@ class Consent(object):
             self.timestamp == other.timestamp,
             self.month == other.month,
             self.attributes == other.attributes,
-            self.question_hash == other.question_hash
         )
 
     def get_current_time(self) -> datetime:
@@ -114,11 +108,6 @@ class Consent(object):
             else:
                 break
         return delta
-
-    @staticmethod
-    def generate_question_hash(id: str, selected_attribute_dict: dict, entity_id: str) -> str:
-        id_string = "%s%s%s" % (id, json.dumps(selected_attribute_dict), entity_id)
-        return hashlib.sha512(id_string.encode("utf-8")).hexdigest().encode("utf-8")
 
 class StartDateInFuture(Exception):
     pass

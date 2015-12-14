@@ -15,6 +15,7 @@ from flask import g
 from flask import abort
 from flask import request
 from flask import session
+
 from flask import redirect
 
 from cmservice.consent import Consent
@@ -65,7 +66,7 @@ def send_js(path):
 
 @app.route("/verify/<id>")
 def verify(id):
-    attributes = cm.find_consent(id)
+    attributes = cm.find_consent(id, app.config['CONSENT_SALT'])
     if attributes:
         return attributes
     abort(401)
@@ -174,13 +175,8 @@ def save_consent():
         abort(400)
 
     if ok == "Yes":
-        consent_question = Consent.generate_question_hash(
-            session["id"],
-            selected_attribute_dict=session["attr"],
-            entity_id=session["requestor"]
-        )
-        consent = Consent(session["id"], attributes, consent_question, int(month))
-        cm.save_consent(consent)
+        consent = Consent(session["id"], attributes, int(month))
+        cm.save_consent(consent, app.config["CONSENT_SALT"])
         session.clear()
     return redirect(redirect_uri)
 

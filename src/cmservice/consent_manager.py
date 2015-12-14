@@ -38,11 +38,14 @@ class ConsentManager(object, metaclass=Singleton):
         self.ticket_ttl = ticket_ttl
         self.max_month = max_month
 
-    def find_consent(self, id: str):
+    def find_consent(self, id: str, salt: str):
         """
         :param id: Identifier for a given consent
+        :param salt: Salt which is needed in order to receive the same consent
+        as the one stored in the database
         :return True if valid consent exists else false
         """
+        id = ConsentManager.hash_consent_id(id, salt)
         consent = self.consent_db.get_consent(id)
         if consent:
             if not consent.has_expired(self.max_month):
@@ -102,8 +105,15 @@ class ConsentManager(object, metaclass=Singleton):
             LOGGER.warning("Falied to retrive ticket data from ticket: %s" % ticket)
             return None
 
-    def save_consent(self, consent):
+    @staticmethod
+    def hash_consent_id(id: str, salt: str):
+        return hashlib.sha512(id.encode("utf-8") + salt.encode("utf-8")) \
+            .hexdigest().encode("utf-8").decode("utf-8")
+
+    def save_consent(self, consent, salt):
         """
         :param consent: The consent object to store
+        :param salt: salt used in hash function
         """
+        consent.id = ConsentManager.hash_consent_id(consent.id, salt)
         self.consent_db.save_consent(consent)

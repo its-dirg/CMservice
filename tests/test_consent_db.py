@@ -21,7 +21,7 @@ class TestConsentDB():
         self.data = TicketData({"asd": "asd"}, timestamp=self.time)
         self.consent_id = "id_123"
         self.attibutes = ["name", "email"]
-        self.consent = Consent(self.consent_id, self.attibutes, "", 1,
+        self.consent = Consent(self.consent_id, self.attibutes, 1,
                                timestamp=self.time)
 
     @pytest.mark.parametrize("database", CONSENT_DATABASES)
@@ -48,7 +48,7 @@ class TestConsentDB():
             (datetime.datetime(2015, 1, 1), datetime.datetime(2016, 2, 1), 12),
         ]
         for start_time, current_time, month in parameters:
-            consent = Consent(self.consent_id, self.attibutes, "", month, timestamp=start_time)
+            consent = Consent(self.consent_id, self.attibutes, month, timestamp=start_time)
             get_current_time.return_value = current_time
             database.save_consent(consent)
             assert not database.get_consent(self.consent_id)
@@ -61,7 +61,7 @@ class TestConsentDB():
             (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 12, 31), 12),
         ]
         for start_time, current_time, month in parameters:
-            consent = Consent(self.consent_id, self.attibutes, "", month, timestamp=start_time)
+            consent = Consent(self.consent_id, self.attibutes, month, timestamp=start_time)
             get_current_time.return_value = current_time
             database.save_consent(consent)
             assert database.get_consent(self.consent_id)
@@ -78,7 +78,6 @@ class TestConsentDB():
         consent = Consent(
             self.consent_id,
             None,
-            "",
             999
         )
         database.save_consent(consent)
@@ -88,7 +87,7 @@ class TestConsentDB():
         consent_id = "id1"
         tmp_file = tempfile.NamedTemporaryFile()
         consent_db = SQLite3ConsentDB(1, tmp_file.name)
-        consent_db.save_consent(Consent(consent_id, ["attr1"], "question_hash", month=1))
+        consent_db.save_consent(Consent(consent_id, ["attr1"], month=1))
         assert consent_db.size() == 1
 
         ticket_db = DictTicketDB()
