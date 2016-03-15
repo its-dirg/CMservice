@@ -1,5 +1,5 @@
 # CMservice
-A general service to handle concent management.
+A webservice for collecting and storing end-user consent of attributes.
 
 # Run CMservice 
 
