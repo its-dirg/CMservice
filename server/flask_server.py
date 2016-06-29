@@ -93,7 +93,7 @@ def consent():
         session["state"] = uuid4().urn
         session["redirect_endpoint"] = data["redirect_endpoint"]
         session["attr"] = data["attr"]
-        session["locked_attr"] = data["locked_attr"]
+        session["locked_attrs"] = data.get("locked_attrs", [])
         session["requester_name"] = data["requester_name"]
 
         return render_consent(language=request.accept_languages.best_match(['sv', 'en']))
@@ -112,7 +112,7 @@ def render_consent(language):
     if not requester_name:
         requester_name = session["requester_name"][0]['text']
 
-    locked_attr = session["locked_attr"]
+    locked_attr = session["locked_attrs"]
     if not isinstance(locked_attr, list):
         locked_attr = [locked_attr]
 
