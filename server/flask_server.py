@@ -95,7 +95,6 @@ def consent():
         session["attr"] = data["attr"]
         session["locked_attr"] = data["locked_attr"]
         session["requester_name"] = data["requester_name"]
-        session["requestor"] = data["requestor"]
 
         return render_consent(language=request.accept_languages.best_match(['sv', 'en']))
     except Exception as ex:
