@@ -1,6 +1,9 @@
 # CMservice
 A webservice for collecting and storing end-user consent of attributes.
 
+# Install dependencies
+To install all necessary dependencies, run `python setup.py install` in the root directory.
+
 # Run CMservice 
 
 Copy the **settings.cfg.example** and rename the copy **settings.cfg**. At the moment it's not 
