@@ -19,6 +19,11 @@ setup(
     classifiers=['Development Status :: 4 - Beta',
                  'Topic :: Software Development :: Libraries :: Python Modules',
                  'Programming Language :: Python :: 3.4'],
-    install_requires=["Flask", "pyjwkest", "Flask-Babel", "Flask-Mako", "dataset"],
+    install_requires=[
+        'Flask',
+        'pyjwkest',
+        'Flask-Babel',
+        'Flask-Mako',
+        'dataset'],
     zip_safe=False,
 )
