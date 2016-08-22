@@ -96,7 +96,7 @@ class SQLite3TicketDB(TicketDB):
         :param id: A consent ticket.
         :param data: Ticket data.
         """
-        row = {"ticket": ticket}
+        row = {'ticket': ticket}
         row.update(data.to_dict())
         self.ticket_table.upsert(row, ['ticket'])
 

@@ -1,7 +1,7 @@
 import logging
+import sys
 from importlib import import_module
 
-import sys
 import pkg_resources
 from babel.support import LazyProxy
 from flask import Flask
@@ -70,13 +70,14 @@ def init_consent_manager(app):
     ticket_db = load_ticket_db_class(app.config['TICKET_DATABASE_CLASS_PATH'],
                                      app.config['TICKET_DATABASE_CLASS_PARAMETERS'])
 
-    cm = ConsentManager(consent_db, ticket_db, load_keys(app.config["JWT_PUB_KEY"]), app.config["TICKET_TTL"],
-                        app.config["MAX_CONSENT_EXPIRATION_MONTH"])
+    cm = ConsentManager(consent_db, ticket_db, load_keys(app.config['JWT_PUB_KEY']), app.config['TICKET_TTL'],
+                        app.config['MAX_CONSENT_EXPIRATION_MONTH'])
     return cm
 
+
 def setup_logging(logging_level):
-    logger = logging.getLogger("")
-    base_formatter = logging.Formatter("[%(asctime)-19.19s] [%(levelname)-5.5s]: %(message)s")
+    logger = logging.getLogger('')
+    base_formatter = logging.Formatter('[%(asctime)-19.19s] [%(levelname)-5.5s]: %(message)s')
     hdlr = logging.StreamHandler(sys.stdout)
     hdlr.setFormatter(base_formatter)
     hdlr.setLevel(logging_level)
@@ -92,9 +93,11 @@ def create_app(config_file=None, config={}):
 
     mako = MakoTemplates()
     mako.init_app(app)
-    app._mako_lookup = TemplateLookup(directories=[pkg_resources.resource_filename("cmservice.service", "templates")],
+    app._mako_lookup = TemplateLookup(directories=[pkg_resources.resource_filename('cmservice.service', 'templates')],
                                       input_encoding='utf-8', output_encoding='utf-8',
-                                      imports=["from flask.ext.babel import gettext as _"])
+                                      imports=['from flask_babel import gettext as _']
+                                      # TODO not necessary according to https://pythonhosted.org/Flask-Mako/#babel-integration
+                                      )
 
     app.cm = init_consent_manager(app)
     app.secret_key = app.config['SECRET_SESSION_KEY']
@@ -105,7 +108,7 @@ def create_app(config_file=None, config={}):
     from .views import consent_views
     app.register_blueprint(consent_views)
 
-    setup_logging(app.config.get("LOGGING_LEVEL", "INFO"))
+    setup_logging(app.config.get('LOGGING_LEVEL', 'INFO'))
 
     return app
 
@@ -126,25 +129,23 @@ def ugettext(s):
 
 ugettext_lazy = LazyProxy(ugettext)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import ssl
 
-    app = create_app("settings.cfg")
-
-
+    app = create_app('settings.cfg')
 
     context = None
     if app.config['SSL']:
         context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        context.load_cert_chain(app.config["SERVER_CERT"], app.config["SERVER_KEY"])
+        context.load_cert_chain(app.config['SERVER_CERT'], app.config['SERVER_KEY'])
     keys = []
-    for key in app.config["JWT_PUB_KEY"]:
+    for key in app.config['JWT_PUB_KEY']:
         _bkey = rsa_load(key)
         pub_key = RSAKey().load_key(_bkey)
         keys.append(pub_key)
     global cm
 
-    print("CMservice running at %s:%s" % (app.config['HOST'], app.config['PORT']))
+    print('CMservice running at %s:%s' % (app.config['HOST'], app.config['PORT']))
 
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'],
             ssl_context=context)

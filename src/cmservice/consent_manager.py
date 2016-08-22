@@ -88,7 +88,7 @@ class ConsentManager(object, metaclass=Singleton):
         """
         _jwt = JWT().unpack(jwt)
         jso = _jwt.payload()
-        if "id" not in jso or "attr" not in jso or "redirect_endpoint" not in jso:
+        if 'id' not in jso or 'attr' not in jso or 'redirect_endpoint' not in jso:
             return None
         return jso
 
