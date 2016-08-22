@@ -6,8 +6,8 @@ import pkg_resources
 from babel.support import LazyProxy
 from flask import Flask
 from flask import g
-from flask.ext.babel import Babel
 from flask.globals import session
+from flask_babel import Babel
 from flask_mako import MakoTemplates
 from jwkest.jwk import rsa_load, RSAKey
 from mako.lookup import TemplateLookup
