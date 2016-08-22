@@ -2,6 +2,7 @@ import logging
 from importlib import import_module
 
 import sys
+import pkg_resources
 from babel.support import LazyProxy
 from flask import Flask
 from flask import g
@@ -91,7 +92,7 @@ def create_app(config_file=None, config={}):
 
     mako = MakoTemplates()
     mako.init_app(app)
-    app._mako_lookup = TemplateLookup(directories=["templates"],
+    app._mako_lookup = TemplateLookup(directories=[pkg_resources.resource_filename("cmservice.service", "templates")],
                                       input_encoding='utf-8', output_encoding='utf-8',
                                       imports=["from flask.ext.babel import gettext as _"])
 
