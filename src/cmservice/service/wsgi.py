@@ -3,7 +3,6 @@ import sys
 from importlib import import_module
 
 import pkg_resources
-from babel.support import LazyProxy
 from flask import Flask
 from flask import g
 from flask.globals import session
@@ -21,9 +20,6 @@ def ugettext(s):
     # assigns the correct user-specific
     # translations
     return g.translations.ugettext(s)
-
-
-ugettext_lazy = LazyProxy(ugettext)
 
 
 def import_database_class(db_module_name):
@@ -126,8 +122,6 @@ def ugettext(s):
     # translations
     return g.translations.ugettext(s)
 
-
-ugettext_lazy = LazyProxy(ugettext)
 
 if __name__ == '__main__':
     import ssl
