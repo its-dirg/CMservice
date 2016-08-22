@@ -1,6 +1,7 @@
 import json
 from urllib.parse import urlencode
 
+import flask
 import pytest
 from jwkest.jwk import RSAKey, rsa_load
 from jwkest.jws import JWS
@@ -15,6 +16,7 @@ class TestWSGIApp:
         self.signing_key = RSAKey(key=rsa_load(cert_and_key[1]), alg="RS256")
 
     def test_full_flow(self):
+        id = "test_id"
         attributes = {
             "k0": ["v0"],
             "k1": ["v1.1", "v1.2"],
@@ -23,33 +25,36 @@ class TestWSGIApp:
         consented_attributes = ["k0", "k1"]
 
         # register a consent request for some attributes
-        jws = JWS(json.dumps(attributes), alg=self.signing_key.alg).sign_compact([self.signing_key])
+        consent_args = {
+            "attr": attributes,
+            "id": id,
+            "redirect_endpoint": "https://client.example.com/callback",
+            "requester_name": [{"text": "a ae oo", "lang": "en"}, {"text": "å ä ö", "lang": "sv"}]
+        }
+        jws = JWS(json.dumps(consent_args), alg=self.signing_key.alg).sign_compact([self.signing_key])
         path = "/creq/{}".format(jws)
         resp = self.app.get(path)
         assert resp.status_code == 200
-        resp.data.decode("utf-8")
+        ticket = resp.data.decode("utf-8")
+
+        # ask user for consent
+        path = "/consent/{}".format(ticket)
+        with self.app as c:
+            resp = self.app.get(path)
+            state = flask.session["state"]
+        assert resp.status_code == 200
 
         # give consent for the requested attributes
-        redirect_url = "https://client.example.com"
-        state = "test_state"
-        id = "test_id"
-        with self.app as c:
-            with c.session_transaction() as sess:
-                sess["redirect_endpoint"] = redirect_url
-                sess["state"] = state
-                sess["attr"] = list(attributes.keys())
-                sess["id"] = id
-
-            request = {
-                "state": state,
-                "month": 3,
-                "attributes": ",".join(consented_attributes),
-                "consent_status": "Yes"
-            }
-            path = "/save_consent?" + urlencode(request)
-            resp = c.get(path)
-            assert resp.status_code == 302
-            assert resp.headers["Location"] == redirect_url
+        request = {
+            "state": state,
+            "month": 3,
+            "attributes": ",".join(consented_attributes),
+            "consent_status": "Yes"
+        }
+        path = "/save_consent?" + urlencode(request)
+        resp = self.app.get(path)
+        assert resp.status_code == 302
+        assert resp.headers["Location"] == consent_args["redirect_endpoint"]
 
         # verify consent is given for the requested attributes
         path = "/verify/{}".format(id)
