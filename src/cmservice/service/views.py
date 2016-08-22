@@ -38,11 +38,9 @@ def creq(jwt):
         abort(400)
 
 
-@consent_views.route('/consent', methods=['GET'])
-def consent():
+@consent_views.route('/consent/<ticket>', methods=['GET'])
+def consent(ticket):
     try:
-        # gettext("test")
-        ticket = request.args["ticket"]
         data = current_app.cm.get_attributes(ticket)
         if data is None:
             abort(403)
