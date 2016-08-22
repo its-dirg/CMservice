@@ -2,6 +2,7 @@ import copy
 import traceback
 from uuid import uuid4
 
+import pkg_resources
 from flask import abort
 from flask import redirect
 from flask import request
@@ -18,7 +19,7 @@ consent_views = Blueprint('consent_service', __name__, url_prefix='')
 
 @consent_views.route('/static/<path:path>')
 def send_js(path):
-    return send_from_directory('static', path)
+    return send_from_directory(pkg_resources.resource_filename('cmservice.service', 'site/static'), path)
 
 
 @consent_views.route("/verify/<id>")
@@ -62,6 +63,7 @@ def render_consent(language):
     session['language'] = language
 
     requester_name = find_requester_name(language)
+    # TODO move this to find_requester_name
     if not requester_name:
         requester_name = find_requester_name('en')
     if not requester_name:
