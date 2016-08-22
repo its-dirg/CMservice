@@ -8,8 +8,6 @@ from cmservice.consent import Consent
 from cmservice.database import DictConsentDB, SQLite3ConsentDB, DictTicketDB, SQLite3TicketDB
 from cmservice.ticket_data import TicketData
 
-__author__ = 'danielevertsson'
-
 CONSENT_DATABASES = [DictConsentDB(999), SQLite3ConsentDB(999)]
 TICKET_DATABASES = [DictTicketDB(), SQLite3TicketDB()]
 

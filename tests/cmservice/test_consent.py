@@ -5,8 +5,6 @@ import pytest
 
 from cmservice.consent import Consent, StartDateInFuture
 
-__author__ = 'danielevertsson'
-
 
 class TestConsent():
     def test_does_not_diff_a_single_month(self):
