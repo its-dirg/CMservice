@@ -1,13 +1,14 @@
-from datetime import datetime
 import json
 import logging
+from datetime import datetime
 
 from cmservice.consent import format_datetime, TIME_PATTERN
 
 LOGGER = logging.getLogger(__name__)
 
+
 class TicketData(object):
-    def __init__(self, data: dict, timestamp: datetime=None):
+    def __init__(self, data: dict, timestamp: datetime = None):
         """
         :param data: Information needed to show the consent page
         :param timestamp: the the ticket data object where created

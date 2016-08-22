@@ -1,17 +1,17 @@
-from datetime import datetime
 import hashlib
 import json
 import logging
+from datetime import datetime
 from time import gmtime, mktime
 
 from jwkest import jws
-
 from jwkest.jwt import JWT
 
 from cmservice.database import ConsentDB, TicketDB
 from cmservice.ticket_data import TicketData
 
 LOGGER = logging.getLogger(__name__)
+
 
 class Singleton(type):
     _instances = {}
@@ -59,7 +59,7 @@ class ConsentManager(object, metaclass=Singleton):
         :param ticket: Identifier for a ticket
         """
         data = self.ticket_db.get_ticketdata(ticket)
-        if (datetime.now()-data.timestamp).total_seconds() > self.ticket_ttl:
+        if (datetime.now() - data.timestamp).total_seconds() > self.ticket_ttl:
             self.ticket_db.remove_ticket(ticket)
 
     def save_consent_req(self, jwt: str):

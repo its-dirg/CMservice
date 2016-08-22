@@ -162,6 +162,7 @@ class ConsentDB(object):
         """
         raise NotImplementedError("Must be implemented!")
 
+
 class DictConsentDB(ConsentDB):
     def __init__(self, max_month):
         super(DictConsentDB, self).__init__(max_month)
@@ -203,6 +204,7 @@ class DictConsentDB(ConsentDB):
         :return: The number of entries in the database
         """
         return len(self.consent_db)
+
 
 class SQLite3ConsentDB(ConsentDB):
     CONSENT_TABLE_NAME = 'consent'
