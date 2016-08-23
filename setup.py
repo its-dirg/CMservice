@@ -31,7 +31,9 @@ setup(
         'pyjwkest',
         'Flask-Babel',
         'Flask-Mako',
-        'dataset'],
+        'dataset',
+        'gunicorn'
+    ],
     zip_safe=False,
     message_extractors={'.': [
         ('src/cmservice/**.py', 'python', None),

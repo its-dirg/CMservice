@@ -80,12 +80,14 @@ def setup_logging(logging_level):
     logger.addHandler(hdlr)
 
 
-def create_app(config_file=None, config={}):
-    app = Flask(__name__, static_url_path='')
+def create_app(config=None):
+    app = Flask(__name__, static_url_path='', instance_relative_config=True)
 
-    if config_file:
-        app.config.from_pyfile(config)
-    app.config.update(config)
+    if config:
+        app.config.update(config)
+    else:
+        app.config.from_envvar("CMSERVICE_CONFIG")
+
 
     mako = MakoTemplates()
     mako.init_app(app)
@@ -96,7 +98,6 @@ def create_app(config_file=None, config={}):
                                       )
 
     app.cm = init_consent_manager(app)
-    app.secret_key = app.config['SECRET_SESSION_KEY']
 
     babel = Babel(app)
     babel.localeselector(get_locale)
@@ -123,25 +124,3 @@ def ugettext(s):
     # assigns the correct user-specific
     # translations
     return g.translations.ugettext(s)
-
-
-if __name__ == '__main__':
-    import ssl
-
-    app = create_app('settings.cfg')
-
-    context = None
-    if app.config['SSL']:
-        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        context.load_cert_chain(app.config['SERVER_CERT'], app.config['SERVER_KEY'])
-    keys = []
-    for key in app.config['JWT_PUB_KEY']:
-        _bkey = rsa_load(key)
-        pub_key = RSAKey().load_key(_bkey)
-        keys.append(pub_key)
-    global cm
-
-    print('CMservice running at %s:%s' % (app.config['HOST'], app.config['PORT']))
-
-    app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'],
-            ssl_context=context)

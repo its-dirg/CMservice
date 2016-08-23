@@ -45,7 +45,7 @@ def app_config(cert_and_key):
         TESTING=True,
         DEBUG=True,
         JWT_PUB_KEY=[cert_and_key[0]],
-        SECRET_SESSION_KEY='fdgfds%€#&436gfjhköltfsdjglök34j5oö43ijtglkfdjgasdftglok432jtgerfd',
+        SECRET_KEY='fdgfds%€#&436gfjhköltfsdjglök34j5oö43ijtglkfdjgasdftglok432jtgerfd',
         TICKET_TTL=600,
         CONSENT_DATABASE_CLASS_PATH='cmservice.database.DictConsentDB',
         CONSENT_DATABASE_CLASS_PARAMETERS=[],
