@@ -1,2 +1,4 @@
-pytest
-future
+pyopenssl==16.0.0
+pytest-flask==0.10.0
+requests==2.11.1
+selenium

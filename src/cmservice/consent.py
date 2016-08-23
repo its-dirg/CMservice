@@ -1,7 +1,7 @@
-from calendar import monthrange
-from datetime import datetime, timedelta
 import json
 import logging
+from calendar import monthrange
+from datetime import datetime, timedelta
 
 LOGGER = logging.getLogger(__name__)
 TIME_PATTERN = "%Y %m %d %H:%M:%S"
@@ -20,7 +20,7 @@ def format_datetime(datetime: datetime, format=None) -> datetime:
 
 
 class Consent(object):
-    def __init__(self, id: str, attributes: list, month: int, timestamp: datetime=None):
+    def __init__(self, id: str, attributes: list, month: int, timestamp: datetime = None):
         """
 
         :param id: Identifier for the consent
@@ -108,6 +108,7 @@ class Consent(object):
             else:
                 break
         return delta
+
 
 class StartDateInFuture(Exception):
     pass

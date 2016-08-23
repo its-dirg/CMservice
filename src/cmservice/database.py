@@ -96,7 +96,7 @@ class SQLite3TicketDB(TicketDB):
         :param id: A consent ticket.
         :param data: Ticket data.
         """
-        row = {"ticket": ticket}
+        row = {'ticket': ticket}
         row.update(data.to_dict())
         self.ticket_table.upsert(row, ['ticket'])
 
@@ -162,6 +162,7 @@ class ConsentDB(object):
         """
         raise NotImplementedError("Must be implemented!")
 
+
 class DictConsentDB(ConsentDB):
     def __init__(self, max_month):
         super(DictConsentDB, self).__init__(max_month)
@@ -203,6 +204,7 @@ class DictConsentDB(ConsentDB):
         :return: The number of entries in the database
         """
         return len(self.consent_db)
+
 
 class SQLite3ConsentDB(ConsentDB):
     CONSENT_TABLE_NAME = 'consent'

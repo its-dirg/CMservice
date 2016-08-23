@@ -11,8 +11,7 @@ possible to name the configuration anything other then **settings.cfg**. If need
 necessary configurations. 
 
 ```shell
-    cd CMservice/server/
-    python flask_server.py
+CMSERVICE_CONFIG=/Users/regu0004/dev/consent_service/server/settings.cfg gunicorn cmservice.service.run:app
 ```
 
 # Configuration
@@ -22,7 +21,7 @@ necessary configurations.
 | SERVER_CERT | String | "./keys/server.crt" | The path to the certificate file used by SSL comunication |
 | SERVER_KEY | String | "./keys/server.key" | The path to the key file used by SSL comunication |
 | JWT_PUB_KEY | List of strings | ["./keys/mykey.pub"] | A list of signature verification keys |
-| SECRET_SESSION_KEY | String | "t3ijtgglok432jtgerfd" | A random value used by cryptographic components to for example to sign the session cookie |
+| SECRET_KEY | String | "t3ijtgglok432jtgerfd" | A random value used by cryptographic components to for example to sign the session cookie |
 | PORT | Integer | 8166 | Port on which the CMservice should start |
 | HOST | String | "127.0.0.1" | The IP-address on which the CMservice should run |
 | DEBUG | boolean | False | Turn on or off the Flask servers internal debuggin, should be turned off to ensure that all log information get stored in the log file |
@@ -66,3 +65,21 @@ for more information on how to switch between the different database instances.
 | TicketData | The unpacked original consent request which where sent as a singed JWT. The request contains user attributes and values in plain text, a user ID a redirect URL, information about the service provider making the request |
 
 
+# Development
+
+## i18n
+
+To extract all i18n string:
+
+```bash
+python setup.py extract_messages --input-paths src/cmservice/ --output-file src/cmservice/service/data/i18n/messages.pot
+```
+
+To compile .po->.mo:
+
+```bash
+python setup.py compile_catalog --directory src/cmservice/service/data/i18n/locales/
+```
+
+
+See [Babel docs](http://babel.pocoo.org/en/latest/setup.html) for more info.
