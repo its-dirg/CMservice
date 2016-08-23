@@ -24,28 +24,30 @@ class InvalidConsentRequestError(ValueError):
 
 class ConsentManager(object):
     def __init__(self, consent_db: ConsentDB, ticket_db: TicketDB, keys: list, ticket_ttl: int,
-                 max_month: int):
+                 max_month: int, salt: str):
         """
         :param consent_db: database in which the consent information is stored
         :param ticket_db: database in which the ticket information is stored
         :param keys: Public keys to verify JWT signature.
         :param ticket_ttl: How long the ticket should live in seconds.
         :param max_month: For how long the consent should be valid
+        :param salt: Salt to use when hashing id's to be stored in the databases
         """
         self.consent_db = consent_db
         self.ticket_db = ticket_db
         self.keys = keys
         self.ticket_ttl = ticket_ttl
         self.max_month = max_month
+        self.salt = salt
 
-    def fetch_consented_attributes(self, id: str, salt: str):
+    def fetch_consented_attributes(self, id: str):
         """
         :param id: Identifier for a given consent
         :param salt: Salt which is needed in order to receive the same consent
         as the one stored in the database
         :return True if valid consent exists else false
         """
-        hashed_id = hash_consent_id(id, salt)
+        hashed_id = hash_consent_id(id, self.salt)
         consent = self.consent_db.get_consent(hashed_id)
         if consent and not consent.has_expired(self.max_month):
             return consent.attributes
@@ -89,10 +91,10 @@ class ConsentManager(object):
             logger.debug('failed to retrieve ticket data from ticket: %s' % ticket)
             return None
 
-    def save_consent(self, consent: Consent, salt: str):
+    def save_consent(self, consent: Consent):
         """
         :param consent: The consent object to store
         :param salt: salt used in hash function
         """
-        consent.id = hash_consent_id(consent.id, salt)
+        consent.id = hash_consent_id(consent.id, self.salt)
         self.consent_db.save_consent(consent)

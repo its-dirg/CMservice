@@ -23,17 +23,17 @@ class TestConsentManager(object):
         self.signing_key = RSAKey(key=RSA.generate(1024), alg='RS256')
         self.salt = str(random.randint(0, sys.maxsize))
 
-        self.cm = ConsentManager(self.consent_db, self.ticket_db, [self.signing_key], 3600, self.max_month)
+        self.cm = ConsentManager(self.consent_db, self.ticket_db, [self.signing_key], 3600, self.max_month, self.salt)
 
     def test_fetch_consented_attributes(self):
         id = "test"
         consented_attributes = ["a", "b", "c"]
         consent = Consent(hash_consent_id(id, self.salt), consented_attributes, 3)
         self.consent_db.save_consent(consent)
-        assert self.cm.fetch_consented_attributes(id, self.salt) == consented_attributes
+        assert self.cm.fetch_consented_attributes(id) == consented_attributes
 
     def test_fetch_consented_attributes_with_unknown_id(self):
-        assert not self.cm.fetch_consented_attributes('unknown', self.salt)
+        assert not self.cm.fetch_consented_attributes('unknown')
 
     def test_fetch_expired_consented_attributes(self):
         id = "test"
@@ -42,7 +42,7 @@ class TestConsentManager(object):
                           datetime.now() - timedelta(weeks=14))
         assert consent.has_expired(self.max_month)
         self.consent_db.save_consent(consent)
-        assert not self.cm.fetch_consented_attributes(id, self.salt)
+        assert not self.cm.fetch_consented_attributes(id)
 
     def test_save_consent_request(self):
         consent_args = {'id': 'test_id', 'attr': ['xyz', 'abc'], 'redirect_endpoint': 'test_redirect'}
@@ -86,5 +86,5 @@ class TestConsentManager(object):
     def test_save_consent(self):
         id = 'test_id'
         consent = Consent(id, ['foo', 'bar'], 2, datetime.now())
-        self.cm.save_consent(consent, self.salt)
+        self.cm.save_consent(consent)
         assert self.consent_db.get_consent(hash_consent_id(id, self.salt)) == consent

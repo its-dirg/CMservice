@@ -25,7 +25,7 @@ def send_js(path):
 
 @consent_views.route("/verify/<id>")
 def verify(id):
-    attributes = current_app.cm.fetch_consented_attributes(id, current_app.config['CONSENT_SALT'])
+    attributes = current_app.cm.fetch_consented_attributes(id)
     if attributes:
         return json.dumps(attributes)
     abort(401)
@@ -133,6 +133,6 @@ def save_consent():
 
     if ok == 'Yes':
         consent = Consent(session['id'], attributes, int(month))
-        current_app.cm.save_consent(consent, current_app.config['CONSENT_SALT'])
+        current_app.cm.save_consent(consent)
         session.clear()
     return redirect(redirect_uri)

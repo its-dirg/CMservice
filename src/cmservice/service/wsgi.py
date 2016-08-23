@@ -67,7 +67,7 @@ def init_consent_manager(app):
                                      app.config['TICKET_DATABASE_CLASS_PARAMETERS'])
 
     cm = ConsentManager(consent_db, ticket_db, load_keys(app.config['JWT_PUB_KEY']), app.config['TICKET_TTL'],
-                        app.config['MAX_CONSENT_EXPIRATION_MONTH'])
+                        app.config['MAX_CONSENT_EXPIRATION_MONTH'], app.config['CONSENT_SALT'])
     return cm
 
 
