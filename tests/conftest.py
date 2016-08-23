@@ -43,6 +43,7 @@ def create_self_signed_cert(cert_path, key_path):
 def app_config(cert_and_key):
     config = dict(
         TESTING=True,
+        DEBUG=True,
         JWT_PUB_KEY=[cert_and_key[0]],
         SECRET_SESSION_KEY='fdgfds%€#&436gfjhköltfsdjglök34j5oö43ijtglkfdjgasdftglok432jtgerfd',
         TICKET_TTL=600,
