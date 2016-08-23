@@ -1,16 +1,25 @@
 import hashlib
 import json
 import logging
-from datetime import datetime
 from time import gmtime, mktime
 
+import jwkest
 from jwkest import jws
-from jwkest.jwt import JWT
 
+from cmservice.consent import Consent
 from cmservice.database import ConsentDB, TicketDB
 from cmservice.ticket_data import TicketData
 
 LOGGER = logging.getLogger(__name__)
+
+
+def hash_consent_id(id: str, salt: str):
+    return hashlib.sha512(id.encode("utf-8") + salt.encode("utf-8")) \
+        .hexdigest().encode("utf-8").decode("utf-8")
+
+
+class InvalidConsentRequestError(ValueError):
+    pass
 
 
 class ConsentManager(object):
@@ -36,75 +45,51 @@ class ConsentManager(object):
         as the one stored in the database
         :return True if valid consent exists else false
         """
-        id = ConsentManager.hash_consent_id(id, salt)
-        consent = self.consent_db.get_consent(id)
-        if consent:
-            if not consent.has_expired(self.max_month):
-                return json.dumps(consent.attributes)
+        hashed_id = hash_consent_id(id, salt)
+        consent = self.consent_db.get_consent(hashed_id)
+        if consent and not consent.has_expired(self.max_month):
+            return consent.attributes
         return None
 
-    def verify_ticket(self, ticket: str):
-        """
-        Verifies if the ticket is valid and removes it from the database.
-
-        :param ticket: Identifier for a ticket
-        """
-        data = self.ticket_db.get_ticketdata(ticket)
-        if (datetime.now() - data.timestamp).total_seconds() > self.ticket_ttl:
-            self.ticket_db.remove_ticket(ticket)
+    def _is_valid_consent_request(self, request: dict):
+        return set(['id', 'attr', 'redirect_endpoint']).issubset(set(request.keys()))
 
     def save_consent_request(self, jwt: str):
         """
         :param jwt: JWT represented as a string
         """
-        self.verify_jwt(jwt)
-        jso = self.unpack_jwt(jwt)
+        try:
+            request = jws.factory(jwt).verify_compact(jwt, self.keys)
+        except jwkest.Invalid as e:
+            LOGGER.debug('invalid signature: %s', str(e))
+            raise InvalidConsentRequestError('Invalid signature') from e
+
+        if not self._is_valid_consent_request(request):
+            LOGGER.debug('invalid consent request: %s', json.dumps(request))
+            raise InvalidConsentRequestError('Invalid consent request')
+
         ticket = hashlib.sha256((jwt + str(mktime(gmtime()))).encode("UTF-8")).hexdigest()
-        data = TicketData(jso)
+        data = TicketData(request)
         self.ticket_db.save_consent_request(ticket, data)
         return ticket
-
-    def verify_jwt(self, jwt: str):
-        """
-        Verifies the signature of the JWT
-
-        :param jwt: JWT represented as a string
-        """
-        _jw = jws.factory(jwt)
-        _jw.verify_compact(jwt, self.keys)
-
-    def unpack_jwt(self, jwt: str):
-        """
-        :param jwt: JWT represented as a string
-        """
-        _jwt = JWT().unpack(jwt)
-        jso = _jwt.payload()
-        if 'id' not in jso or 'attr' not in jso or 'redirect_endpoint' not in jso:
-            return None
-        return jso
 
     def fetch_consent_request(self, ticket: str):
         """
         :param ticket: Identifier for the ticket
         :return: Information about the consent request
         """
-        try:
-            ticketdata = self.ticket_db.get_ticketdata(ticket)
+        ticketdata = self.ticket_db.get_ticketdata(ticket)
+        if ticketdata:
             self.ticket_db.remove_ticket(ticket)
             return ticketdata.data
-        except:
-            LOGGER.warning("Falied to retrive ticket data from ticket: %s" % ticket)
+        else:
+            LOGGER.warning("Failed to retrieve ticket data from ticket: %s" % ticket)
             return None
 
-    @staticmethod
-    def hash_consent_id(id: str, salt: str):
-        return hashlib.sha512(id.encode("utf-8") + salt.encode("utf-8")) \
-            .hexdigest().encode("utf-8").decode("utf-8")
-
-    def save_consent(self, consent, salt):
+    def save_consent(self, consent: Consent, salt: str):
         """
         :param consent: The consent object to store
         :param salt: salt used in hash function
         """
-        consent.id = ConsentManager.hash_consent_id(consent.id, salt)
+        consent.id = hash_consent_id(consent.id, salt)
         self.consent_db.save_consent(consent)

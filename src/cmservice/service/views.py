@@ -1,4 +1,5 @@
 import copy
+import json
 import traceback
 from uuid import uuid4
 
@@ -26,7 +27,7 @@ def send_js(path):
 def verify(id):
     attributes = current_app.cm.fetch_consented_attributes(id, current_app.config['CONSENT_SALT'])
     if attributes:
-        return attributes
+        return json.dumps(attributes)
     abort(401)
 
 
