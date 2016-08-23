@@ -32,7 +32,8 @@ setup(
         'Flask-Babel',
         'Flask-Mako',
         'dataset',
-        'gunicorn'
+        'gunicorn',
+        'python-dateutil'
     ],
     zip_safe=False,
     message_extractors={'.': [

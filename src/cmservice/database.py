@@ -218,6 +218,7 @@ class DictConsentDB(ConsentDB):
 
 class SQLite3ConsentDB(ConsentDB):
     CONSENT_TABLE_NAME = 'consent'
+    TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
     def __init__(self, max_month, consent_db_path=None):
         super(SQLite3ConsentDB, self).__init__(max_month)
@@ -232,7 +233,13 @@ class SQLite3ConsentDB(ConsentDB):
 
         :param consent: A given consent. A consent is always allow.
         """
-        self.consent_table.upsert(consent.to_dict(), ['consent_id'])
+        data = {
+            'consent_id': consent.id,
+            'timestamp': consent.timestamp.strftime(SQLite3ConsentDB.TIME_PATTERN),
+            'months_valid': consent.months_valid,
+            'attributes': json.dumps(consent.attributes),
+        }
+        self.consent_table.upsert(data, ['consent_id'])
 
     def get_consent(self, id: str) -> Consent:
         """
@@ -242,12 +249,15 @@ class SQLite3ConsentDB(ConsentDB):
         :return: A given consent.
         """
         result = self.consent_table.find_one(consent_id=id)
-        consent = Consent.from_dict(result)
-        if consent:
+        if result:
+            consent = Consent(result['consent_id'], json.loads(result['attributes']), result['months_valid'],
+                              datetime.strptime(result['timestamp'], SQLite3ConsentDB.TIME_PATTERN))
             if consent.has_expired(self.max_month):
                 self.remove_consent(id)
                 return None
-        return consent
+            return consent
+
+        return None
 
     def remove_consent(self, id: str):
         """

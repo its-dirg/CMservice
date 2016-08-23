@@ -40,28 +40,28 @@ class TestConsentDB():
         assert not database.get_ticketdata(self.ticket)
 
     @pytest.mark.parametrize('database', CONSENT_DATABASES)
-    @patch('cmservice.consent.Consent.get_current_time')
-    def test_if_nothing_is_return_if_policy_has_expired(self, get_current_time, database):
+    @patch('cmservice.consent.datetime')
+    def test_if_nothing_is_return_if_policy_has_expired(self, mock_datetime, database):
         parameters = [
             (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 3, 1), 1),
             (datetime.datetime(2015, 1, 1), datetime.datetime(2016, 2, 1), 12),
         ]
         for start_time, current_time, month in parameters:
             consent = Consent(self.consent_id, self.attibutes, month, timestamp=start_time)
-            get_current_time.return_value = current_time
+            mock_datetime.now.return_value = current_time
             database.save_consent(consent)
             assert not database.get_consent(self.consent_id)
 
     @pytest.mark.parametrize('database', CONSENT_DATABASES)
-    @patch('cmservice.consent.Consent.get_current_time')
-    def test_if_policy_has_not_yet_expired(self, get_current_time, database):
+    @patch('cmservice.consent.datetime')
+    def test_if_policy_has_not_yet_expired(self, mock_datetime, database):
         parameters = [
             (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 1, 30), 1),
             (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 12, 31), 12),
         ]
         for start_time, current_time, month in parameters:
             consent = Consent(self.consent_id, self.attibutes, month, timestamp=start_time)
-            get_current_time.return_value = current_time
+            mock_datetime.now.return_value = current_time
             database.save_consent(consent)
             assert database.get_consent(self.consent_id)
 
@@ -86,7 +86,7 @@ class TestConsentDB():
         consent_id = 'id1'
         tmp_file = tempfile.NamedTemporaryFile()
         consent_db = SQLite3ConsentDB(1, tmp_file.name)
-        consent_db.save_consent(Consent(consent_id, ['attr1'], month=1))
+        consent_db.save_consent(Consent(consent_id, ['attr1'], months_valid=1))
         assert consent_db.size() == 1
 
         ticket_db = DictTicketDB()
