@@ -13,16 +13,7 @@ from cmservice.ticket_data import TicketData
 LOGGER = logging.getLogger(__name__)
 
 
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
-class ConsentManager(object, metaclass=Singleton):
+class ConsentManager(object):
     def __init__(self, consent_db: ConsentDB, ticket_db: TicketDB, keys: list, ticket_ttl: int,
                  max_month: int):
         """
