@@ -10,7 +10,7 @@ from cmservice.consent import Consent
 from cmservice.database import ConsentDB, TicketDB
 from cmservice.ticket_data import TicketData
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def hash_consent_id(id: str, salt: str):
@@ -49,6 +49,8 @@ class ConsentManager(object):
         consent = self.consent_db.get_consent(hashed_id)
         if consent and not consent.has_expired(self.max_month):
             return consent.attributes
+
+        logger.debug('No consented attributes for id: \'%s\'', id)
         return None
 
     def _is_valid_consent_request(self, request: dict):
@@ -61,11 +63,11 @@ class ConsentManager(object):
         try:
             request = jws.factory(jwt).verify_compact(jwt, self.keys)
         except jwkest.Invalid as e:
-            LOGGER.debug('invalid signature: %s', str(e))
+            logger.debug('invalid signature: %s', str(e))
             raise InvalidConsentRequestError('Invalid signature') from e
 
         if not self._is_valid_consent_request(request):
-            LOGGER.debug('invalid consent request: %s', json.dumps(request))
+            logger.debug('invalid consent request: %s', json.dumps(request))
             raise InvalidConsentRequestError('Invalid consent request')
 
         ticket = hashlib.sha256((jwt + str(mktime(gmtime()))).encode("UTF-8")).hexdigest()
@@ -81,9 +83,10 @@ class ConsentManager(object):
         ticketdata = self.ticket_db.get_ticketdata(ticket)
         if ticketdata:
             self.ticket_db.remove_ticket(ticket)
+            logger.debug('found consent request: %s', ticketdata.data)
             return ticketdata.data
         else:
-            LOGGER.warning("Failed to retrieve ticket data from ticket: %s" % ticket)
+            logger.debug('failed to retrieve ticket data from ticket: %s' % ticket)
             return None
 
     def save_consent(self, consent: Consent, salt: str):
