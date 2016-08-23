@@ -100,6 +100,8 @@ def create_app(config_file=None, config={}):
 
     babel = Babel(app)
     babel.localeselector(get_locale)
+    app.config['BABEL_TRANSLATION_DIRECTORIES'] = pkg_resources.resource_filename('cmservice.service',
+                                                                                  'data/i18n/locales')
 
     from .views import consent_views
     app.register_blueprint(consent_views)

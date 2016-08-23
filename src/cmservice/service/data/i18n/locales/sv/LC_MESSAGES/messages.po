@@ -1,11 +1,11 @@
-# Swedish translations for PROJECT.
+# Swedish translations for CMservice.
 # Copyright (C) 2015 ORGANIZATION
-# This file is distributed under the same license as the PROJECT project.
+# This file is distributed under the same license as the CMservice project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PROJECT VERSION\n"
+"Project-Id-Version: CMservice 1.0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2015-12-07 16:41+0100\n"
 "PO-Revision-Date: 2015-11-04 12:49+0100\n"
@@ -17,63 +17,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 
-#: templates/consent.mako:12
+#: src/cmservice/service/templates/consent.mako:12
 msgid "Consent - Your consent is required to continue."
 msgstr "Samtycke - Ditt medgivande krävs för att fortsätta."
 
-#: templates/consent.mako:22
+#: src/cmservice/service/templates/consent.mako:22
 msgid "would like to access the following attributes:"
 msgstr "vill få tillgång till följande attribut:"
 
-#: templates/consent.mako:44
+#: src/cmservice/service/templates/consent.mako:44
 msgid "Locked attributes"
 msgstr "Låsta attribut"
 
-#: templates/consent.mako:45
+#: src/cmservice/service/templates/consent.mako:45
 msgid "The following attributes is not optional. If you don't want to send these you need to abort."
 msgstr "Följande attribut går inte att välja bort. Om du inte vill skicka dessa måste du avbrya."
 
-#: templates/consent.mako:58
+#: src/cmservice/service/templates/consent.mako:58
 msgid "For how many month do you want to give consent for this particular service:"
 msgstr "För hur många månader vill du ge samtycke for den angivna tjänsten:"
 
-#: templates/consent.mako:71
+#: src/cmservice/service/templates/consent.mako:71
 msgid "Ok, accept"
 msgstr "Ja, acceptera"
 
-#: templates/consent.mako:72
+#: src/cmservice/service/templates/consent.mako:72
 msgid "No, cancel"
 msgstr "Nej, avbryt"
 
-#: templates/consent.mako:103
+#: src/cmservice/service/templates/consent.mako:104
 msgid "No attributes where selected which equals no consent where given"
 msgstr "Inga attribut har angets, vilket är equivalent med att inte ge samtycke överhuvudtaget"
 
-#: templates/list_values.mako:1
+#: src/cmservice/service/templates/list_values.mako:1
 msgid "mail"
 msgstr "E-postadress"
 
-#: templates/list_values.mako:2
+#: src/cmservice/service/templates/list_values.mako:2
 msgid "address"
 msgstr "Adress"
 
-#: templates/list_values.mako:3
+#: src/cmservice/service/templates/list_values.mako:3
 msgid "name"
 msgstr "Namn"
 
-#: templates/list_values.mako:4
+#: src/cmservice/service/templates/list_values.mako:4
 msgid "surname"
 msgstr "Efternamn"
 
-#: templates/list_values.mako:5
+#: src/cmservice/service/templates/list_values.mako:5
 msgid "givenname"
 msgstr "Förnamn"
 
-#: templates/list_values.mako:6
+#: src/cmservice/service/templates/list_values.mako:6
 msgid "displayname"
 msgstr "Smeknamn"
 
-#: templates/list_values.mako:7
+#: src/cmservice/service/templates/list_values.mako:7
 msgid "edupersontargetedid"
 msgstr "Användarid"
 
@@ -81,11 +81,11 @@ msgstr "Användarid"
 msgid "year"
 msgstr "År"
 
-#: templates/list_values.mako:10
+#: src/cmservice/service/templates/list_values.mako:10
 msgid "month"
 msgstr "Månad"
 
-#: templates/list_values.mako:11
+#: src/cmservice/service/templates/list_values.mako:11
 msgid "never"
 msgstr "Aldrig"
 

@@ -1,0 +1,94 @@
+# Translations template for CMservice.
+# Copyright (C) 2016 ORGANIZATION
+# This file is distributed under the same license as the CMservice project.
+# Rebecka Gulliksson <rebecka.gulliksson@umu.se>, 2016.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CMservice 1.0.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2016-08-23 08:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.3.4\n"
+
+#: src/cmservice/service/templates/consent.mako:12
+msgid "Consent - Your consent is required to continue."
+msgstr ""
+
+#: src/cmservice/service/templates/consent.mako:22
+msgid "would like to access the following attributes:"
+msgstr ""
+
+#: src/cmservice/service/templates/consent.mako:44
+msgid "Locked attributes"
+msgstr ""
+
+#: src/cmservice/service/templates/consent.mako:45
+msgid ""
+"The following attributes is not optional. If you don't want to send these"
+" you need to abort."
+msgstr ""
+
+#: src/cmservice/service/templates/consent.mako:58
+msgid ""
+"For how many month do you want to give consent for this particular "
+"service:"
+msgstr ""
+
+#: src/cmservice/service/templates/consent.mako:71
+msgid "Ok, accept"
+msgstr ""
+
+#: src/cmservice/service/templates/consent.mako:72
+msgid "No, cancel"
+msgstr ""
+
+#: src/cmservice/service/templates/consent.mako:104
+msgid "No attributes where selected which equals no consent where given"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:1
+msgid "mail"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:2
+msgid "address"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:3
+msgid "name"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:4
+msgid "surname"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:5
+msgid "givenname"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:6
+msgid "displayname"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:7
+msgid "edupersontargetedid"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:9
+msgid "year"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:10
+msgid "month"
+msgstr ""
+
+#: src/cmservice/service/templates/list_values.mako:11
+msgid "never"
+msgstr ""
+

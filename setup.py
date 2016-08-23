@@ -18,6 +18,7 @@ setup(
     package_dir={'': 'src'},
     package_data={
         'cmservice.service': [
+            'data/i18n/locales/*/LC_MESSAGES/*.po',
             'templates/*.mako',
             'site/static/*',
         ],
@@ -32,4 +33,9 @@ setup(
         'Flask-Mako',
         'dataset'],
     zip_safe=False,
+    message_extractors={'.': [
+        ('src/cmservice/**.py', 'python', None),
+        ('src/cmservice/**/service/templates/**.mako', 'mako', None),
+        ('src/cmservice/**/service/site/**', 'ignore', None)
+    ]}
 )

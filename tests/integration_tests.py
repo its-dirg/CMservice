@@ -100,11 +100,13 @@ class TestService:
         select.options[0].click()
         requester = selenium_driver.find_element_by_xpath('//b')
         assert requester.text == self.requester_name[0]['text']
-        # TODO assert some other text one the page is in english
+        page_heading = selenium_driver.find_element_by_xpath('//h1')
+        assert "Consent" in page_heading.text
 
         # switch language: swedish
         select = Select(selenium_driver.find_element_by_xpath('//select[@name="lang"]'))
         select.options[1].click()
         requester = selenium_driver.find_element_by_xpath('//b')
         assert requester.text == self.requester_name[1]['text']
-        # TODO assert some other text one the page has changed language
+        page_heading = selenium_driver.find_element_by_xpath('//h1')
+        assert "Samtycke" in page_heading.text

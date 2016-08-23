@@ -66,3 +66,21 @@ for more information on how to switch between the different database instances.
 | TicketData | The unpacked original consent request which where sent as a singed JWT. The request contains user attributes and values in plain text, a user ID a redirect URL, information about the service provider making the request |
 
 
+# Development
+
+## i18n
+
+To extract all i18n string:
+
+```bash
+python setup.py extract_messages --input-paths src/cmservice/ --output-file src/cmservice/service/data/i18n/messages.pot
+```
+
+To compile .po->.mo:
+
+```bash
+python setup.py compile_catalog --directory src/cmservice/service/data/i18n/locales/
+```
+
+
+See [Babel docs](http://babel.pocoo.org/en/latest/setup.html) for more info.
