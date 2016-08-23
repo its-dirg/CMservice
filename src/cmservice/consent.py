@@ -68,13 +68,11 @@ class Consent(object):
         :return: If all attributes in the consent object matches this method will return True else
                  false.
         """
-        return (
-            isinstance(other, self.__class__) and
-            self.id == other.id and
-            self.timestamp == other.timestamp,
-            self.month == other.month,
-            self.attributes == other.attributes,
-        )
+        return (isinstance(other, type(self))
+                and self.id == other.id
+                and self.timestamp == other.timestamp
+                and self.month == other.month
+                and self.attributes == other.attributes)
 
     def get_current_time(self) -> datetime:
         """
