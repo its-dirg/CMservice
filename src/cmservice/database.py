@@ -1,3 +1,6 @@
+import json
+from datetime import datetime
+
 import dataset
 
 from cmservice.consent import Consent
@@ -81,6 +84,7 @@ class DictTicketDB(TicketDB):
 
 class SQLite3TicketDB(TicketDB):
     TICKET_TABLE_NAME = 'ticket'
+    TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
     def __init__(self, ticket_db_path=None):
         super(SQLite3TicketDB, self).__init__()
@@ -96,8 +100,11 @@ class SQLite3TicketDB(TicketDB):
         :param id: A consent ticket.
         :param data: Ticket data.
         """
-        row = {'ticket': ticket}
-        row.update(data.to_dict())
+        row = {
+            'ticket': ticket,
+            'data': json.dumps(data.data),
+            'timestamp': data.timestamp.strftime(SQLite3TicketDB.TIME_PATTERN)
+        }
         self.ticket_table.upsert(row, ['ticket'])
 
     def get_ticketdata(self, ticket: str) -> TicketData:
@@ -108,7 +115,10 @@ class SQLite3TicketDB(TicketDB):
         :return: The data connected to a ticket.
         """
         result = self.ticket_table.find_one(ticket=ticket)
-        return TicketData.from_dict(result)
+        if result:
+            return TicketData(json.loads(result['data']),
+                              timestamp=datetime.strptime(result['timestamp'], SQLite3TicketDB.TIME_PATTERN))
+        return None
 
     def remove_ticket(self, ticket: str):
         """
