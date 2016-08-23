@@ -29,7 +29,7 @@ class ConsentManager(object):
         self.ticket_ttl = ticket_ttl
         self.max_month = max_month
 
-    def find_consent(self, id: str, salt: str):
+    def fetch_consented_attributes(self, id: str, salt: str):
         """
         :param id: Identifier for a given consent
         :param salt: Salt which is needed in order to receive the same consent
@@ -53,7 +53,7 @@ class ConsentManager(object):
         if (datetime.now() - data.timestamp).total_seconds() > self.ticket_ttl:
             self.ticket_db.remove_ticket(ticket)
 
-    def save_consent_req(self, jwt: str):
+    def save_consent_request(self, jwt: str):
         """
         :param jwt: JWT represented as a string
         """
@@ -83,7 +83,7 @@ class ConsentManager(object):
             return None
         return jso
 
-    def get_attributes(self, ticket: str):
+    def fetch_consent_request(self, ticket: str):
         """
         :param ticket: Identifier for the ticket
         :return: Information about the consent request

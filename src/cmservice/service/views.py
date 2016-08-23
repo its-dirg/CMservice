@@ -24,7 +24,7 @@ def send_js(path):
 
 @consent_views.route("/verify/<id>")
 def verify(id):
-    attributes = current_app.cm.find_consent(id, current_app.config['CONSENT_SALT'])
+    attributes = current_app.cm.fetch_consented_attributes(id, current_app.config['CONSENT_SALT'])
     if attributes:
         return attributes
     abort(401)
@@ -33,7 +33,7 @@ def verify(id):
 @consent_views.route("/creq/<jwt>")
 def creq(jwt):
     try:
-        ticket = current_app.cm.save_consent_req(jwt)
+        ticket = current_app.cm.save_consent_request(jwt)
         return ticket
     except Exception as e:
         abort(400)
@@ -42,7 +42,7 @@ def creq(jwt):
 @consent_views.route('/consent/<ticket>', methods=['GET'])
 def consent(ticket):
     try:
-        data = current_app.cm.get_attributes(ticket)
+        data = current_app.cm.fetch_consent_request(ticket)
         if data is None:
             abort(403)
         session['id'] = data['id']
