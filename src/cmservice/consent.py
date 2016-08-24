@@ -7,7 +7,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Consent(object):
-    def __init__(self, id: str, attributes: list, months_valid: int, timestamp: datetime = None):
+    def __init__(self, attributes: list, months_valid: int, timestamp: datetime = None):
         """
 
         :param id: identifier for the consent
@@ -18,14 +18,12 @@ class Consent(object):
         """
         if not timestamp:
             timestamp = datetime.now()
-        self.id = id
         self.timestamp = timestamp
         self.attributes = attributes
         self.months_valid = months_valid
 
     def __eq__(self, other) -> bool:
         return (isinstance(other, type(self))
-                and self.id == other.id
                 and self.months_valid == other.months_valid
                 and self.attributes == other.attributes
                 and abs(self.timestamp - other.timestamp) < timedelta(seconds=1))

@@ -132,7 +132,7 @@ def save_consent():
         abort(400)
 
     if ok == 'Yes':
-        consent = Consent(session['id'], attributes, int(month))
-        current_app.cm.save_consent(consent)
+        consent = Consent(attributes, int(month))
+        current_app.cm.save_consent(session['id'], consent)
         session.clear()
     return redirect(redirect_uri)

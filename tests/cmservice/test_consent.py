@@ -15,7 +15,7 @@ class TestConsent():
     def test_valid_consent_date(self, mock_datetime, current_time, month):
         mock_datetime.now.return_value = current_time
         start_date = datetime.datetime(2015, 1, 1)
-        consent = Consent('id', None, month, timestamp=start_date)
+        consent = Consent(None, month, timestamp=start_date)
         assert not consent.has_expired(999)
 
     @pytest.mark.parametrize('current_time, month, max_month', [
@@ -26,5 +26,5 @@ class TestConsent():
     def test_consent_has_expired(self, mock_datetime, current_time, month, max_month):
         mock_datetime.now.return_value = current_time
         start_date = datetime.datetime(2015, 1, 1)
-        consent = Consent('id', None, month, timestamp=start_date)
+        consent = Consent(None, month, timestamp=start_date)
         assert consent.has_expired(max_month)

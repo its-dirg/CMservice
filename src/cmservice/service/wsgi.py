@@ -33,20 +33,20 @@ class MustInheritFromConsentDB(Exception):
     pass
 
 
-def load_consent_db_class(db_class, consent_expiration_time, init_args):
+def load_consent_db_class(db_class, salt, consent_expiration_time, init_args):
     consent_database_class = import_database_class(db_class)
     if not issubclass(consent_database_class, ConsentDB):
         raise MustInheritFromConsentDB(
             "%s does not inherit from ConsentDB" % consent_database_class)
-    consent_db = consent_database_class(consent_expiration_time, *init_args)
+    consent_db = consent_database_class(salt, consent_expiration_time, *init_args)
     return consent_db
 
 
-def load_ticket_db_class(db_class, init_args):
+def load_consent_request_db_class(db_class, salt, init_args):
     ticket_database_class = import_database_class(db_class)
     if not issubclass(ticket_database_class, ConsentRequestDB):
         raise MustInheritFromConsentDB("%s does not inherit from ConsentRequestDB" % ticket_database_class)
-    ticket_db = ticket_database_class(*init_args)
+    ticket_db = ticket_database_class(salt, *init_args)
     return ticket_db
 
 
@@ -61,13 +61,15 @@ def load_keys(path):
 
 def init_consent_manager(app):
     consent_db = load_consent_db_class(app.config['CONSENT_DATABASE_CLASS_PATH'],
+                                       app.config['CONSENT_SALT'],
                                        app.config['MAX_CONSENT_EXPIRATION_MONTH'],
                                        app.config['CONSENT_DATABASE_CLASS_PARAMETERS'])
-    ticket_db = load_ticket_db_class(app.config['TICKET_DATABASE_CLASS_PATH'],
-                                     app.config['TICKET_DATABASE_CLASS_PARAMETERS'])
+    ticket_db = load_consent_request_db_class(app.config['TICKET_DATABASE_CLASS_PATH'],
+                                              app.config['CONSENT_SALT'],
+                                              app.config['TICKET_DATABASE_CLASS_PARAMETERS'])
 
     cm = ConsentManager(consent_db, ticket_db, load_keys(app.config['JWT_PUB_KEY']), app.config['TICKET_TTL'],
-                        app.config['MAX_CONSENT_EXPIRATION_MONTH'], app.config['CONSENT_SALT'])
+                        app.config['MAX_CONSENT_EXPIRATION_MONTH'])
     return cm
 
 

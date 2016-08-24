@@ -1,6 +1,4 @@
 import json
-import random
-import sys
 from datetime import timedelta, datetime
 
 import pytest
@@ -9,7 +7,7 @@ from jwkest.jwk import RSAKey
 from jwkest.jws import JWS
 
 from cmservice.consent import Consent
-from cmservice.consent_manager import ConsentManager, InvalidConsentRequestError, hash_consent_id
+from cmservice.consent_manager import ConsentManager, InvalidConsentRequestError
 from cmservice.database import DictConsentDB, DictConsentRequestDB
 from cmservice.ticket_data import ConsentRequest
 
@@ -17,19 +15,18 @@ from cmservice.ticket_data import ConsentRequest
 class TestConsentManager(object):
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.consent_db = DictConsentDB(12)
-        self.ticket_db = DictConsentRequestDB()
+        self.consent_db = DictConsentDB("salt", 12)
+        self.ticket_db = DictConsentRequestDB("salt")
         self.max_month = 12
         self.signing_key = RSAKey(key=RSA.generate(1024), alg='RS256')
-        self.salt = str(random.randint(0, sys.maxsize))
 
-        self.cm = ConsentManager(self.consent_db, self.ticket_db, [self.signing_key], 3600, self.max_month, self.salt)
+        self.cm = ConsentManager(self.consent_db, self.ticket_db, [self.signing_key], 3600, self.max_month)
 
     def test_fetch_consented_attributes(self):
         id = "test"
         consented_attributes = ["a", "b", "c"]
-        consent = Consent(hash_consent_id(id, self.salt), consented_attributes, 3)
-        self.consent_db.save_consent(consent)
+        consent = Consent(consented_attributes, 3)
+        self.consent_db.save_consent(id, consent)
         assert self.cm.fetch_consented_attributes(id) == consented_attributes
 
     def test_fetch_consented_attributes_with_unknown_id(self):
@@ -38,10 +35,9 @@ class TestConsentManager(object):
     def test_fetch_expired_consented_attributes(self):
         id = "test"
         consented_attributes = ['a', 'b', 'c']
-        consent = Consent(hash_consent_id(id, self.salt), consented_attributes, 2,
-                          datetime.now() - timedelta(weeks=14))
+        consent = Consent(consented_attributes, 2, datetime.now() - timedelta(weeks=14))
         assert consent.has_expired(self.max_month)
-        self.consent_db.save_consent(consent)
+        self.consent_db.save_consent(id, consent)
         assert not self.cm.fetch_consented_attributes(id)
 
     def test_save_consent_request(self):
@@ -85,6 +81,6 @@ class TestConsentManager(object):
 
     def test_save_consent(self):
         id = 'test_id'
-        consent = Consent(id, ['foo', 'bar'], 2, datetime.now())
-        self.cm.save_consent(consent)
-        assert self.consent_db.get_consent(hash_consent_id(id, self.salt)) == consent
+        consent = Consent(['foo', 'bar'], 2, datetime.now())
+        self.cm.save_consent(id, consent)
+        assert self.consent_db.get_consent(id) == consent
