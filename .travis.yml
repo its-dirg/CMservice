@@ -14,4 +14,4 @@ matrix:
 
 script:
   - tox
-  - if [[ "${TRAVIS_BRANCH}" == "master" ]]; then echo "Running integration"; tox -e integration; fi
+  - if [[ "${TRAVIS_BRANCH}" == "master" ]]; then tox -e integration; fi
