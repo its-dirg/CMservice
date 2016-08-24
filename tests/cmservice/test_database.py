@@ -39,30 +39,29 @@ class TestConsentDB():
         assert not database.get_consent_request(self.ticket)
 
     @pytest.mark.parametrize('database', CONSENT_DATABASES)
+    @pytest.mark.parametrize('start_time, current_time, months_valid', [
+        (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 3, 1), 1),
+        (datetime.datetime(2015, 1, 1), datetime.datetime(2016, 2, 1), 12),
+    ])
     @patch('cmservice.consent.datetime')
-    def test_if_nothing_is_return_if_policy_has_expired(self, mock_datetime, database):
-        parameters = [
-            (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 3, 1), 1),
-            (datetime.datetime(2015, 1, 1), datetime.datetime(2016, 2, 1), 12),
-        ]
-        for start_time, current_time, month in parameters:
-            consent = Consent(self.attibutes, month, timestamp=start_time)
-            mock_datetime.now.return_value = current_time
-            database.save_consent(self.consent_id, consent)
-            assert not database.get_consent(self.consent_id)
+    def test_if_nothing_is_return_if_policy_has_expired(self, mock_datetime, database, start_time, current_time,
+                                                        months_valid):
+        consent = Consent(self.attibutes, months_valid, timestamp=start_time)
+        mock_datetime.now.return_value = current_time
+        database.save_consent(self.consent_id, consent)
+        assert not database.get_consent(self.consent_id)
 
     @pytest.mark.parametrize('database', CONSENT_DATABASES)
+    @pytest.mark.parametrize('start_time, current_time, months_valid', [
+        (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 1, 30), 1),
+        (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 12, 31), 12),
+    ])
     @patch('cmservice.consent.datetime')
-    def test_if_policy_has_not_yet_expired(self, mock_datetime, database):
-        parameters = [
-            (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 1, 30), 1),
-            (datetime.datetime(2015, 1, 1), datetime.datetime(2015, 12, 31), 12),
-        ]
-        for start_time, current_time, month in parameters:
-            consent = Consent(self.attibutes, month, timestamp=start_time)
-            mock_datetime.now.return_value = current_time
-            database.save_consent(self.consent_id, consent)
-            assert database.get_consent(self.consent_id)
+    def test_if_policy_has_not_yet_expired(self, mock_datetime, database, start_time, current_time, months_valid):
+        consent = Consent(self.attibutes, months_valid, timestamp=start_time)
+        mock_datetime.now.return_value = current_time
+        database.save_consent(self.consent_id, consent)
+        assert database.get_consent(self.consent_id)
 
     @pytest.mark.parametrize('database', CONSENT_DATABASES)
     def test_remove_consent_from_db(self, database):
