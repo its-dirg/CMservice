@@ -95,7 +95,7 @@ class SQLite3ConsentRequestDB(ConsentRequestDB):
             'data': json.dumps(consent_request.data),
             'timestamp': consent_request.timestamp.strftime(SQLite3ConsentRequestDB.TIME_PATTERN)
         }
-        self.ticket_table.upsert(row, ['ticket'])
+        self.ticket_table.insert(row)
 
     def get_consent_request(self, ticket: str) -> ConsentRequest:
         result = self.ticket_table.find_one(ticket=hash_id(ticket, self.salt))
@@ -194,7 +194,7 @@ class SQLite3ConsentDB(ConsentDB):
             'months_valid': consent.months_valid,
             'attributes': json.dumps(consent.attributes),
         }
-        self.consent_table.upsert(data, ['consent_id'])
+        self.consent_table.insert(data)
 
     def get_consent(self, id: str) -> Consent:
         hashed_id = hash_id(id, self.salt)
