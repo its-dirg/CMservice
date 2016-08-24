@@ -1,10 +1,9 @@
 import copy
-import json
-import traceback
+import logging
 from uuid import uuid4
 
 import pkg_resources
-from flask import abort
+from flask import abort, jsonify
 from flask import redirect
 from flask import request
 from flask import session
@@ -14,8 +13,11 @@ from flask.helpers import send_from_directory
 from flask_mako import render_template
 
 from cmservice.consent import Consent
+from cmservice.consent_manager import InvalidConsentRequestError
 
 consent_views = Blueprint('consent_service', __name__, url_prefix='')
+
+logger = logging.getLogger(__name__)
 
 
 @consent_views.route('/static/<path:path>')
@@ -27,7 +29,10 @@ def send_js(path):
 def verify(id):
     attributes = current_app.cm.fetch_consented_attributes(id)
     if attributes:
-        return json.dumps(attributes)
+        return jsonify(attributes)
+
+    # no consent for the given id or it has expired
+    logging.debug('no consent found for id \'%s\'', id)
     abort(401)
 
 
@@ -36,28 +41,53 @@ def creq(jwt):
     try:
         ticket = current_app.cm.save_consent_request(jwt)
         return ticket
-    except Exception as e:
+    except InvalidConsentRequestError as e:
+        logger.debug('received invalid consent request: %s, %s', str(e), jwt)
         abort(400)
 
 
-@consent_views.route('/consent/<ticket>', methods=['GET'])
+@consent_views.route('/consent/<ticket>')
 def consent(ticket):
-    try:
-        data = current_app.cm.fetch_consent_request(ticket)
-        if data is None:
-            abort(403)
-        session['id'] = data['id']
-        session['state'] = uuid4().urn
-        session['redirect_endpoint'] = data['redirect_endpoint']
-        session['attr'] = data['attr']
-        session['locked_attrs'] = data.get('locked_attrs', [])
-        session['requester_name'] = data['requester_name']
+    data = current_app.cm.fetch_consent_request(ticket)
+    if data is None:
+        # unknown ticket
+        logger.debug('received invalid ticket: \'%s\'', ticket)
+        abort(403)
+    session['id'] = data['id']
+    session['state'] = uuid4().urn
+    session['redirect_endpoint'] = data['redirect_endpoint']
+    session['attr'] = data['attr']
+    session['locked_attrs'] = data.get('locked_attrs', [])
+    session['requester_name'] = data['requester_name']
 
-        return render_consent(language=request.accept_languages.best_match(['sv', 'en']))
-    except Exception as ex:
-        if current_app.debug:
-            traceback.print_exc()
+    # TODO should find list of supported languages dynamically
+    return render_consent(language=request.accept_languages.best_match(['sv', 'en']))
+
+
+@consent_views.route('/set_language')
+def set_language():
+    return render_consent(request.args['lang'])
+
+
+@consent_views.route('/save_consent')
+def save_consent():
+    state = request.args['state']
+    redirect_uri = session['redirect_endpoint']
+    month = request.args['month']
+    attributes = request.args['attributes'].split(",")
+
+    if state != session['state']:
+        abort(403)
+    ok = request.args['consent_status']
+
+    if ok == 'Yes' and not set(attributes).issubset(set(session['attr'])):
         abort(400)
+
+    if ok == 'Yes':
+        consent = Consent(attributes, int(month))
+        current_app.cm.save_consent(session['id'], consent)
+        session.clear()
+    return redirect(redirect_uri)
 
 
 def render_consent(language):
@@ -101,38 +131,3 @@ def find_requester_name(language):
         if requester_name['lang'] == language:
             match = requester_name['text']
     return match
-
-
-@consent_views.route('/set_language', methods=['GET'])
-def set_language():
-    try:
-        return render_consent(request.args['lang'])
-    except Exception as ex:
-        if current_app.debug:
-            traceback.print_exc()
-        abort(400)
-
-
-def isSubset(list_, sub_list):
-    return set(sub_list) <= set(list_)
-
-
-@consent_views.route('/save_consent', methods=['GET'])
-def save_consent():
-    state = request.args['state']
-    redirect_uri = session['redirect_endpoint']
-    month = request.args['month']
-    attributes = request.args['attributes'].split(",")
-
-    if state != session['state']:
-        abort(403)
-    ok = request.args['consent_status']
-
-    if ok == 'Yes' and not isSubset(session['attr'], attributes):
-        abort(400)
-
-    if ok == 'Yes':
-        consent = Consent(attributes, int(month))
-        current_app.cm.save_consent(session['id'], consent)
-        session.clear()
-    return redirect(redirect_uri)
