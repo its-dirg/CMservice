@@ -7,8 +7,8 @@ import jwkest
 from jwkest import jws
 
 from cmservice.consent import Consent
-from cmservice.database import ConsentDB, ConsentRequestDB
 from cmservice.consent_request import ConsentRequest
+from cmservice.database import ConsentDB, ConsentRequestDB
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ class ConsentManager(object):
     def __init__(self, consent_db: ConsentDB, ticket_db: ConsentRequestDB, trusted_keys: list, ticket_ttl: int,
                  max_months_valid: int):
         """
+        Constructor.
         :param consent_db: database in which the consent information is stored
         :param ticket_db: database in which the ticket information is stored
         :param trusted_keys: trusted public keys to verify JWT signature.
@@ -33,12 +34,11 @@ class ConsentManager(object):
         self.ticket_ttl = ticket_ttl
         self.max_months_valid = max_months_valid
 
-    def fetch_consented_attributes(self, id: str):
+    def fetch_consented_attributes(self, id: str) -> list:
         """
+        Fetches all consented attributes for the given id.
         :param id: Identifier for a given consent
-        :param salt: Salt which is needed in order to receive the same consent
-        as the one stored in the database
-        :return True if valid consent exists else false
+        :return all consented attributes.
         """
         consent = self.consent_db.get_consent(id)
         if consent and not consent.has_expired(self.max_months_valid):
@@ -49,6 +49,7 @@ class ConsentManager(object):
 
     def save_consent_request(self, jwt: str):
         """
+        Saves a consent request, in the form of a JWT.
         :param jwt: JWT represented as a string
         """
         try:
@@ -67,10 +68,11 @@ class ConsentManager(object):
         self.ticket_db.save_consent_request(ticket, data)
         return ticket
 
-    def fetch_consent_request(self, ticket: str):
+    def fetch_consent_request(self, ticket: str) -> dict:
         """
-        :param ticket: Identifier for the ticket
-        :return: Information about the consent request
+        Fetches a consent request.
+        :param ticket: ticket associated with the consent request
+        :return: the consent request
         """
         ticketdata = self.ticket_db.get_consent_request(ticket)
         if ticketdata:
@@ -83,7 +85,8 @@ class ConsentManager(object):
 
     def save_consent(self, id: str, consent: Consent):
         """
-        :param consent: The consent object to store
-        :param salt: salt used in hash function
+        Saves a user consent entry.
+        :param id: id to associate with the consent
+        :param consent: consent object to store
         """
         self.consent_db.save_consent(id, consent)

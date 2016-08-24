@@ -90,7 +90,7 @@ def save_consent():
     return redirect(redirect_uri)
 
 
-def render_consent(language):
+def render_consent(language: str) -> None:
     session['language'] = language
     requester_name = find_requester_name(session['requester_name'], language)
 
@@ -119,7 +119,7 @@ def render_consent(language):
     )
 
 
-def find_requester_name(requester_name, language):
+def find_requester_name(requester_name: list, language: str) -> str:
     requester_names = {entry['lang']: entry['text'] for entry in requester_name}
     # fallback to english, or if all else fails, use the first entry in the list of names
     fallback = requester_names.get('en', requester_name[0]['text'])

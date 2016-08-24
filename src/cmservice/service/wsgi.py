@@ -14,14 +14,14 @@ from cmservice.consent_manager import ConsentManager
 from cmservice.database import ConsentDB, ConsentRequestDB
 
 
-def import_database_class(db_module_name):
+def import_database_class(db_module_name: str) -> type:
     path, cls = db_module_name.rsplit('.', 1)
     module = import_module(path)
     database_class = getattr(module, cls)
     return database_class
 
 
-def load_consent_db_class(db_class, salt, consent_expiration_time, init_args):
+def load_consent_db_class(db_class: str, salt: str, consent_expiration_time: int, init_args: list):
     consent_db_class = import_database_class(db_class)
     if not issubclass(consent_db_class, ConsentDB):
         raise ValueError("%s does not inherit from ConsentDB" % consent_db_class)
@@ -29,7 +29,7 @@ def load_consent_db_class(db_class, salt, consent_expiration_time, init_args):
     return consent_db
 
 
-def load_consent_request_db_class(db_class, salt, init_args):
+def load_consent_request_db_class(db_class: str, salt: str, init_args: list):
     consent_request_db_class = import_database_class(db_class)
     if not issubclass(consent_request_db_class, ConsentRequestDB):
         raise ValueError("%s does not inherit from ConsentRequestDB" % consent_request_db_class)
@@ -37,7 +37,7 @@ def load_consent_request_db_class(db_class, salt, init_args):
     return consent_request_db
 
 
-def init_consent_manager(app):
+def init_consent_manager(app: Flask):
     consent_db = load_consent_db_class(app.config['CONSENT_DATABASE_CLASS_PATH'],
                                        app.config['CONSENT_SALT'],
                                        app.config['MAX_CONSENT_EXPIRATION_MONTH'],
@@ -52,7 +52,7 @@ def init_consent_manager(app):
     return cm
 
 
-def setup_logging(logging_level):
+def setup_logging(logging_level: str):
     logger = logging.getLogger('')
     base_formatter = logging.Formatter('[%(asctime)-19.19s] [%(levelname)-5.5s]: %(message)s')
     hdlr = logging.StreamHandler(sys.stdout)
@@ -61,7 +61,7 @@ def setup_logging(logging_level):
     logger.addHandler(hdlr)
 
 
-def create_app(config=None):
+def create_app(config: dict = None):
     app = Flask(__name__, static_url_path='', instance_relative_config=True)
 
     if config:

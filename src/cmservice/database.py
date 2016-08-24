@@ -15,9 +15,13 @@ def hash_id(id: str, salt: str):
 
 class ConsentRequestDB(object):
     def __init__(self, salt: str):
+        """
+        Constructor.
+        :param salt: salt to use when hashing id's
+        """
         self.salt = salt
 
-    def save_consent_request(self, ticket: str, consent_request: ConsentRequest) -> str:
+    def save_consent_request(self, ticket: str, consent_request: ConsentRequest):
         """
         Saves a consent request, associated with the ticket.
 
@@ -49,7 +53,7 @@ class DictConsentRequestDB(ConsentRequestDB):
         super().__init__(salt)
         self.tickets = {}
 
-    def save_consent_request(self, ticket: str, consent_request: ConsentRequest) -> str:
+    def save_consent_request(self, ticket: str, consent_request: ConsentRequest):
         hashed_id = hash_id(ticket, self.salt)
         self.tickets[hashed_id] = consent_request
 
@@ -85,7 +89,7 @@ class SQLite3ConsentRequestDB(ConsentRequestDB):
             self.ticket_db = dataset.connect('sqlite:///:memory:')
         self.ticket_table = self.ticket_db[self.TICKET_TABLE_NAME]
 
-    def save_consent_request(self, ticket: str, consent_request: ConsentRequest) -> str:
+    def save_consent_request(self, ticket: str, consent_request: ConsentRequest):
         row = {
             'ticket': hash_id(ticket, self.salt),
             'data': json.dumps(consent_request.data),
@@ -108,7 +112,7 @@ class SQLite3ConsentRequestDB(ConsentRequestDB):
 class ConsentDB(object):
     def __init__(self, salt: str, max_months_valid: int):
         """
-
+        Constructor.
         :param salt: salt which will be used for hashing id's
         :param max_months_valid: max number of months a consent should be valid
         """
