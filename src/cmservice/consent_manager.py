@@ -19,19 +19,19 @@ class InvalidConsentRequestError(ValueError):
 
 class ConsentManager(object):
     def __init__(self, consent_db: ConsentDB, ticket_db: ConsentRequestDB, keys: list, ticket_ttl: int,
-                 max_month: int):
+                 max_months_valid: int):
         """
         :param consent_db: database in which the consent information is stored
         :param ticket_db: database in which the ticket information is stored
         :param keys: Public keys to verify JWT signature.
         :param ticket_ttl: How long the ticket should live in seconds.
-        :param max_month: For how long the consent should be valid
+        :param max_months_valid: how long the consent should be valid
         """
         self.consent_db = consent_db
         self.ticket_db = ticket_db
         self.keys = keys
         self.ticket_ttl = ticket_ttl
-        self.max_month = max_month
+        self.max_months_valid = max_months_valid
 
     def fetch_consented_attributes(self, id: str):
         """
