@@ -1,15 +1,16 @@
 import datetime
+import os
 import tempfile
 from unittest.mock import patch
 
 import pytest
 
 from cmservice.consent import Consent
-from cmservice.database import DictConsentDB, SQLite3ConsentDB, DictTicketDB, SQLite3TicketDB
-from cmservice.ticket_data import TicketData
+from cmservice.database import DictConsentDB, SQLite3ConsentDB, DictConsentRequestDB, SQLite3ConsentRequestDB
+from cmservice.ticket_data import ConsentRequest
 
 CONSENT_DATABASES = [DictConsentDB(999), SQLite3ConsentDB(999)]
-TICKET_DATABASES = [DictTicketDB(), SQLite3TicketDB()]
+TICKET_DATABASES = [DictConsentRequestDB(), SQLite3ConsentRequestDB()]
 
 
 class TestConsentDB():
@@ -17,7 +18,7 @@ class TestConsentDB():
     def setup(self):
         self.ticket = 'ticket_123'
         self.time = datetime.datetime.now()
-        self.data = TicketData({'asd': 'asd'}, timestamp=self.time)
+        self.data = ConsentRequest({'asd': 'asd'}, timestamp=self.time)
         self.consent_id = 'id_123'
         self.attibutes = ['name', 'email']
         self.consent = Consent(self.consent_id, self.attibutes, 1,
@@ -31,13 +32,13 @@ class TestConsentDB():
     @pytest.mark.parametrize('database', TICKET_DATABASES)
     def test_save_consent_request(self, database):
         database.save_consent_request(self.ticket, self.data)
-        assert self.data == database.get_ticketdata(self.ticket)
+        assert self.data == database.get_consent_request(self.ticket)
 
     @pytest.mark.parametrize('database', TICKET_DATABASES)
     def test_remove_ticket(self, database):
         database.save_consent_request(self.ticket, self.data)
-        database.remove_ticket(self.ticket)
-        assert not database.get_ticketdata(self.ticket)
+        database.remove_consent_request(self.ticket)
+        assert not database.get_consent_request(self.ticket)
 
     @pytest.mark.parametrize('database', CONSENT_DATABASES)
     @patch('cmservice.consent.datetime')
@@ -82,18 +83,30 @@ class TestConsentDB():
         database.save_consent(consent)
         assert database.get_consent(self.consent_id) == consent
 
-    def test_store_consent_in_file_and_ticket_in_memory(self):
+
+class TestSQLite3ConsentDB(object):
+    def test_store_db_in_file(self, tmpdir):
         consent_id = 'id1'
-        tmp_file = tempfile.NamedTemporaryFile()
-        consent_db = SQLite3ConsentDB(1, tmp_file.name)
-        consent_db.save_consent(Consent(consent_id, ['attr1'], months_valid=1))
-        assert consent_db.size() == 1
+        consent = Consent(consent_id, ['attr1'], months_valid=1)
+        tmp_file = os.path.join(str(tmpdir), "db")
+        consent_db = SQLite3ConsentDB(1, tmp_file)
+        consent_db.save_consent(consent)
+        assert consent_db.get_consent(consent_id) == consent
 
-        ticket_db = DictTicketDB()
-        ticket_db.save_consent_request('ticket1', TicketData({}))
-        assert ticket_db.size() == 1
+        # make sure it was persisted to file
+        consent_db = SQLite3ConsentDB(1, tmp_file)
+        assert consent_db.get_consent(consent_id) == consent
 
-        ticket_db = DictTicketDB()
-        consent_db = SQLite3ConsentDB(1, tmp_file.name)
-        assert ticket_db.size() == 0
-        assert consent_db.size() == 1
+
+class TestSQLite3ConsentDB(object):
+    def test_store_db_in_file(self, tmpdir):
+        ticket = 'ticket1'
+        consent_req = ConsentRequest({"foo": "bar"})
+        tmp_file = os.path.join(str(tmpdir), "db")
+        consent_req_db = SQLite3ConsentRequestDB(tmp_file)
+        consent_req_db.save_consent_request(ticket, consent_req)
+        assert consent_req_db.get_consent_request(ticket) == consent_req
+
+        # make sure it was persisted to file
+        consent_db = SQLite3ConsentRequestDB(tmp_file)
+        assert consent_db.get_consent_request(ticket) == consent_req

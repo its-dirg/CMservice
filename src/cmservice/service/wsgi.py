@@ -12,7 +12,7 @@ from jwkest.jwk import rsa_load, RSAKey
 from mako.lookup import TemplateLookup
 
 from cmservice.consent_manager import ConsentManager
-from cmservice.database import ConsentDB, TicketDB
+from cmservice.database import ConsentDB, ConsentRequestDB
 
 
 def ugettext(s):
@@ -44,8 +44,8 @@ def load_consent_db_class(db_class, consent_expiration_time, init_args):
 
 def load_ticket_db_class(db_class, init_args):
     ticket_database_class = import_database_class(db_class)
-    if not issubclass(ticket_database_class, TicketDB):
-        raise MustInheritFromConsentDB("%s does not inherit from TicketDB" % ticket_database_class)
+    if not issubclass(ticket_database_class, ConsentRequestDB):
+        raise MustInheritFromConsentDB("%s does not inherit from ConsentRequestDB" % ticket_database_class)
     ticket_db = ticket_database_class(*init_args)
     return ticket_db
 

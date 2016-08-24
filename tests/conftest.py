@@ -52,7 +52,7 @@ def app_config(cert_and_key):
         AUTO_SELECT_ATTRIBUTES=True,
         MAX_CONSENT_EXPIRATION_MONTH=12,
         USER_CONSENT_EXPIRATION_MONTH=[3, 6],
-        TICKET_DATABASE_CLASS_PATH='cmservice.database.DictTicketDB',
+        TICKET_DATABASE_CLASS_PATH='cmservice.database.DictConsentRequestDB',
         TICKET_DATABASE_CLASS_PARAMETERS=[],
         CONSENT_SALT='VFT0yZ2dXzAHRlGb0cAhsac2ipKueybl8ZfuPzsHUrTZ8o7Vs6HnAlMhwbob',
     )

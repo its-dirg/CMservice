@@ -26,15 +26,15 @@ CMSERVICE_CONFIG=/Users/regu0004/dev/consent_service/server/settings.cfg gunicor
 | HOST | String | "127.0.0.1" | The IP-address on which the CMservice should run |
 | DEBUG | boolean | False | Turn on or off the Flask servers internal debuggin, should be turned off to ensure that all log information get stored in the log file |
 | TICKET_TTL | Integer | 600 | For how many seconds the ticket should be valid |
-| CONSENT_DATABASE_CLASS_PATH | String | "cmservice.database.SQLite3ConsentDB" | Specifies which python database class the CMservice should use. Currently there exists two modules DictConsentDB and SQLite3ConsentDB |
+| CONSENT_DATABASE_CLASS_PATH | String | "cmservice.database.SQLite3ConsentDB" | Specifies which python database class the CMservice should use. Currently there exists two modules `DictConsentDB` and `SQLite3ConsentDB` |
 | CONSENT_DATABASE_CLASS_PARAMETERS | List of strings | ["test.db"] | Input parameters which should be passed into the database class specified above. SQLite3ConsentDB needs a single parameter, a path where the database should be stored. DictConsentDB does not take any parameters so [] should be specified |
 | AUTO_SELECT_ATTRIBUTES | boolean | True | Specifies if all the attributes in the GUI should be selected or not |
 | MAX_CONSENT_EXPIRATION_MONTH | Integer | 12 | The maximum numbers of months a consent could be valid |
 | USER_CONSENT_EXPIRATION_MONTH | List of integers | [3, 6] | A list of alternatives for how many months a user wants to give consent |
 | LOGGING_FILE | String | "cmservice.log" | A path to the log file, if none exists it will be created |
 | LOGGING_LEVEL | String | "WARNING" | Which logging level the application should use. Possible values: INFO, DEBUG, WARNING, ERROR and CRITICAL |
-| TICKET_DATABASE_CLASS_PATH | String | "cmservice.database.DictTicketDB" | Specifies which python database class the CMservice should use. Currently there exists two modules DictTicketDB and SQLite3TicketDB |
-| TICKET_DATABASE_CLASS_PARAMETERS | List of strings | [] | Input parameters which should be passed into the database class specified above. SQLite3TicketDB needs a single parameter, a path where the database should be stored. DictTicketDB does not take any parameters so [] should be specified |
+| CONSENT_REQUEST_DATABASE_CLASS_PATH | string | "cmservice.database.DictConsentRequestDB" | Specifies which python database class the CMservice should use. Currently there exists two modules `DictConsentRequestDB` and `SQLite3ConsentRequestDB` |
+| CONSENT_REQUEST_DATABASE_CLASS_PARAMETERS | list of strings | [] | Input parameters which should be passed into the database class specified above. `SQLite3ConsentRequestDB` needs a single parameter, a path where the database should be stored. `DictConsentRequestDB` does not take any parameters so [] should be specified |
 | CONSENT_SALT | String | "VFT0yZ" | A SALT used to hash the consent ID before stroed in the database |
 
 # Storage

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 
-class TicketData(object):
+class ConsentRequest(object):
     def __init__(self, data: dict, timestamp: datetime = None):
         """
         :param data: information needed to show the consent page

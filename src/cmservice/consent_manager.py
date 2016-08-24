@@ -7,8 +7,8 @@ import jwkest
 from jwkest import jws
 
 from cmservice.consent import Consent
-from cmservice.database import ConsentDB, TicketDB
-from cmservice.ticket_data import TicketData
+from cmservice.database import ConsentDB, ConsentRequestDB
+from cmservice.ticket_data import ConsentRequest
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class InvalidConsentRequestError(ValueError):
 
 
 class ConsentManager(object):
-    def __init__(self, consent_db: ConsentDB, ticket_db: TicketDB, keys: list, ticket_ttl: int,
+    def __init__(self, consent_db: ConsentDB, ticket_db: ConsentRequestDB, keys: list, ticket_ttl: int,
                  max_month: int, salt: str):
         """
         :param consent_db: database in which the consent information is stored
@@ -73,7 +73,7 @@ class ConsentManager(object):
             raise InvalidConsentRequestError('Invalid consent request')
 
         ticket = hashlib.sha256((jwt + str(mktime(gmtime()))).encode("UTF-8")).hexdigest()
-        data = TicketData(request)
+        data = ConsentRequest(request)
         self.ticket_db.save_consent_request(ticket, data)
         return ticket
 
@@ -82,9 +82,9 @@ class ConsentManager(object):
         :param ticket: Identifier for the ticket
         :return: Information about the consent request
         """
-        ticketdata = self.ticket_db.get_ticketdata(ticket)
+        ticketdata = self.ticket_db.get_consent_request(ticket)
         if ticketdata:
-            self.ticket_db.remove_ticket(ticket)
+            self.ticket_db.remove_consent_request(ticket)
             logger.debug('found consent request: %s', ticketdata.data)
             return ticketdata.data
         else:

@@ -4,195 +4,134 @@ from datetime import datetime
 import dataset
 
 from cmservice.consent import Consent
-from cmservice.ticket_data import TicketData
+from cmservice.ticket_data import ConsentRequest
 
 
-class TicketDB(object):
-    def save_consent_request(self, ticket: str, data: TicketData) -> str:
+class ConsentRequestDB(object):
+    def save_consent_request(self, ticket: str, consent_request: ConsentRequest) -> str:
         """
-        Will save a concent request and generate a ticket.
+        Saves a consent request, associated with the ticket.
 
-        :param id: A consent ticket.
-        :param data: Ticket data.
-        """
-        raise NotImplementedError("Must be implemented!")
-
-    def get_ticketdata(self, ticket: str) -> TicketData:
-        """
-        Will retrive registered data for a ticket.
-
-        :param ticket: The identification for a TicketData object.
-        :return: The data connected to a ticket.
+        :param ticket: a consent ticket
+        :param consent_request: a consent request
         """
         raise NotImplementedError("Must be implemented!")
 
-    def remove_ticket(self, ticket: str):
+    def get_consent_request(self, ticket: str) -> ConsentRequest:
+        """
+        Retrieves the consent request for a ticket.
+
+        :param ticket: a consent ticket
+        :return: the consent request
+        """
+        raise NotImplementedError("Must be implemented!")
+
+    def remove_consent_request(self, ticket: str):
         """
         Removes a ticket from the database.
 
-        :param ticket: A consent ticket.
-        """
-        raise NotImplementedError("Must be implemented!")
-
-    def size(self):
-        """
-        :return: The number of entries in the database
+        :param ticket: a consent ticket
         """
         raise NotImplementedError("Must be implemented!")
 
 
-class DictTicketDB(TicketDB):
+class DictConsentRequestDB(ConsentRequestDB):
     def __init__(self):
-        super(DictTicketDB, self).__init__()
+        super(DictConsentRequestDB, self).__init__()
         self.tickets = {}
 
-    def save_consent_request(self, ticket: str, data: TicketData) -> str:
-        """
-        Will save a concent request and generate a ticket.
+    def save_consent_request(self, ticket: str, consent_request: ConsentRequest) -> str:
+        self.tickets[ticket] = consent_request
 
-        :param id: A consent ticket.
-        :param data: Ticket data.
-        """
-        self.tickets[ticket] = data
-
-    def get_ticketdata(self, ticket: str) -> TicketData:
-        """
-        Will retrive registered data for a ticket.
-
-        :param id: The identification for a consent.
-        :return: The data connected to a ticket.
-        """
-        if ticket in self.tickets:
+    def get_consent_request(self, ticket: str) -> ConsentRequest:
+        try:
             return self.tickets[ticket]
-        return None
+        except KeyError:
+            return None
 
-    def remove_ticket(self, ticket: str):
-        """
-        Removes a ticket from the database.
-
-        :param ticket: A consent ticket.
-        """
-        if ticket in self.tickets:
-            self.tickets.pop(ticket)
-
-    def size(self):
-        """
-        :return: The number of entries in the database
-        """
-        return len(self.tickets)
+    def remove_consent_request(self, ticket: str):
+        try:
+            del self.tickets[ticket]
+        except KeyError:
+            pass
 
 
-class SQLite3TicketDB(TicketDB):
-    TICKET_TABLE_NAME = 'ticket'
+class SQLite3ConsentRequestDB(ConsentRequestDB):
+    TICKET_TABLE_NAME = 'consent_request'
     TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
-    def __init__(self, ticket_db_path=None):
-        super(SQLite3TicketDB, self).__init__()
-        self.ticket_db = dataset.connect('sqlite:///:memory:')
+    def __init__(self, ticket_db_path: str = None):
+        """
+        Constructor.
+        :param ticket_db_path:  path to the SQLite db.
+                                If not specified an in-memory database will be used.
+        """
+        super(SQLite3ConsentRequestDB, self).__init__()
         if ticket_db_path:
             self.ticket_db = dataset.connect('sqlite:///' + ticket_db_path)
+        else:
+            self.ticket_db = dataset.connect('sqlite:///:memory:')
         self.ticket_table = self.ticket_db[self.TICKET_TABLE_NAME]
 
-    def save_consent_request(self, ticket: str, data: TicketData) -> str:
-        """
-        Will save a concent request and generate a ticket.
-
-        :param id: A consent ticket.
-        :param data: Ticket data.
-        """
+    def save_consent_request(self, ticket: str, consent_request: ConsentRequest) -> str:
         row = {
             'ticket': ticket,
-            'data': json.dumps(data.data),
-            'timestamp': data.timestamp.strftime(SQLite3TicketDB.TIME_PATTERN)
+            'data': json.dumps(consent_request.data),
+            'timestamp': consent_request.timestamp.strftime(SQLite3ConsentRequestDB.TIME_PATTERN)
         }
         self.ticket_table.upsert(row, ['ticket'])
 
-    def get_ticketdata(self, ticket: str) -> TicketData:
-        """
-        Will retrive registered data for a ticket.
-
-        :param id: The identification for a ticket.
-        :return: The data connected to a ticket.
-        """
+    def get_consent_request(self, ticket: str) -> ConsentRequest:
         result = self.ticket_table.find_one(ticket=ticket)
         if result:
-            return TicketData(json.loads(result['data']),
-                              timestamp=datetime.strptime(result['timestamp'], SQLite3TicketDB.TIME_PATTERN))
+            return ConsentRequest(json.loads(result['data']),
+                                  timestamp=datetime.strptime(result['timestamp'],
+                                                              SQLite3ConsentRequestDB.TIME_PATTERN))
         return None
 
-    def remove_ticket(self, ticket: str):
-        """
-        Removes a ticket from the database.
-
-        :param ticket: A consent ticket.
-        """
+    def remove_consent_request(self, ticket: str):
         self.ticket_table.delete(ticket=ticket)
-
-    def size(self):
-        """
-        :return: The number of entries in the database
-        """
-        return self.ticket_table.count()
 
 
 class ConsentDB(object):
-    """This is a base class that defines the method that must be implemented to keep state"""
-
-    def __init__(self, max_month):
-        self.max_month = max_month
+    def __init__(self, max_months_valid: int):
+        self.max_month = max_months_valid
 
     def save_consent(self, consent: Consent):
         """
-        Will save a consent.
+        Saves a consent.
 
-        :param consent: A given consent. A consent is always allow.
+        :param consent: consent information
         """
         raise NotImplementedError("Must be implemented!")
 
     def get_consent(self, id: str) -> Consent:
         """
-        Will retrive a given consent.
+        Retrieves a consent.
 
-        :param id: The identification for a consent.
-        :return: A given consent.
+        :param id: consent id
+        :return: the associated consent information.
         """
         raise NotImplementedError("Must be implemented!")
 
     def remove_consent(self, id: str):
         """
-        Removes a consent from the database.
+        Removes a consent.
 
         :param id: A consent id.
         """
         raise NotImplementedError("Must be implemented!")
 
-    def size(self):
-        """
-        :return: The number of entries in the database
-        """
-        raise NotImplementedError("Must be implemented!")
-
 
 class DictConsentDB(ConsentDB):
-    def __init__(self, max_month):
-        super(DictConsentDB, self).__init__(max_month)
+    def __init__(self, max_months_valid: int):
+        super(DictConsentDB, self).__init__(max_months_valid)
         self.consent_db = {}
 
     def save_consent(self, consent: Consent):
-        """
-        Will save a consent.
-
-        :param consent: A given consent. A consent is always allow.
-        """
         self.consent_db[consent.id] = consent
 
     def get_consent(self, id: str) -> Consent:
-        """
-        Will retrive a given consent.
-
-        :param id: The identification for a consent.
-        :return: A given consent.
-        """
         if id not in self.consent_db:
             return None
         consent = self.consent_db[id]
@@ -202,37 +141,27 @@ class DictConsentDB(ConsentDB):
         return self.consent_db[id]
 
     def remove_consent(self, id: str):
-        """
-        Removes a consent from the database.
-
-        :param id: The identification for a consent.
-        """
         del self.consent_db[id]
-
-    def size(self):
-        """
-        :return: The number of entries in the database
-        """
-        return len(self.consent_db)
 
 
 class SQLite3ConsentDB(ConsentDB):
     CONSENT_TABLE_NAME = 'consent'
     TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
-    def __init__(self, max_month, consent_db_path=None):
-        super(SQLite3ConsentDB, self).__init__(max_month)
-        self.consent_db = dataset.connect('sqlite:///:memory:')
+    def __init__(self, max_months_valid: int, consent_db_path: str = None):
+        """
+        Constructor.
+        :param consent_db_path: path to the SQLite db.
+                                If not specified an in-memory database will be used.
+        """
+        super(SQLite3ConsentDB, self).__init__(max_months_valid)
         if consent_db_path:
             self.consent_db = dataset.connect('sqlite:///' + consent_db_path)
+        else:
+            self.consent_db = dataset.connect('sqlite:///:memory:')
         self.consent_table = self.consent_db[self.CONSENT_TABLE_NAME]
 
     def save_consent(self, consent: Consent):
-        """
-        Will save a consent.
-
-        :param consent: A given consent. A consent is always allow.
-        """
         data = {
             'consent_id': consent.id,
             'timestamp': consent.timestamp.strftime(SQLite3ConsentDB.TIME_PATTERN),
@@ -242,33 +171,16 @@ class SQLite3ConsentDB(ConsentDB):
         self.consent_table.upsert(data, ['consent_id'])
 
     def get_consent(self, id: str) -> Consent:
-        """
-        Will retrive a given consent.
-
-        :param id: The identification for a consent.
-        :return: A given consent.
-        """
         result = self.consent_table.find_one(consent_id=id)
-        if result:
-            consent = Consent(result['consent_id'], json.loads(result['attributes']), result['months_valid'],
-                              datetime.strptime(result['timestamp'], SQLite3ConsentDB.TIME_PATTERN))
-            if consent.has_expired(self.max_month):
-                self.remove_consent(id)
-                return None
-            return consent
+        if not result:
+            return None
 
-        return None
+        consent = Consent(result['consent_id'], json.loads(result['attributes']), result['months_valid'],
+                          datetime.strptime(result['timestamp'], SQLite3ConsentDB.TIME_PATTERN))
+        if consent.has_expired(self.max_month):
+            self.remove_consent(id)
+            return None
+        return consent
 
     def remove_consent(self, id: str):
-        """
-        Removes a consent from the database.
-
-        :param id: The identification for a consent.
-        """
         self.consent_table.delete(consent_id=id)
-
-    def size(self):
-        """
-        :return: The number of entries in the database
-        """
-        return self.consent_table.count()

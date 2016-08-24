@@ -10,15 +10,15 @@ from jwkest.jws import JWS
 
 from cmservice.consent import Consent
 from cmservice.consent_manager import ConsentManager, InvalidConsentRequestError, hash_consent_id
-from cmservice.database import DictConsentDB, DictTicketDB
-from cmservice.ticket_data import TicketData
+from cmservice.database import DictConsentDB, DictConsentRequestDB
+from cmservice.ticket_data import ConsentRequest
 
 
 class TestConsentManager(object):
     @pytest.fixture(autouse=True)
     def setup(self):
         self.consent_db = DictConsentDB(12)
-        self.ticket_db = DictTicketDB()
+        self.ticket_db = DictConsentRequestDB()
         self.max_month = 12
         self.signing_key = RSAKey(key=RSA.generate(1024), alg='RS256')
         self.salt = str(random.randint(0, sys.maxsize))
@@ -48,7 +48,7 @@ class TestConsentManager(object):
         consent_args = {'id': 'test_id', 'attr': ['xyz', 'abc'], 'redirect_endpoint': 'test_redirect'}
         consent_req = JWS(json.dumps(consent_args)).sign_compact([self.signing_key])
         ticket = self.cm.save_consent_request(consent_req)
-        assert self.ticket_db.get_ticketdata(ticket).data == consent_args
+        assert self.ticket_db.get_consent_request(ticket).data == consent_args
 
     def test_save_consent_request_should_raise_exception_for_invalid_signature(self):
         consent_args = {'id': 'test_id', 'attr': ['xyz', 'abc'], 'redirect_endpoint': 'test_redirect'}
@@ -73,14 +73,14 @@ class TestConsentManager(object):
     def test_fetch_consent_request(self):
         ticket = 'test_ticket'
         data = {'foo': 'bar', 'abc': 'xyz'}
-        self.ticket_db.save_consent_request(ticket, TicketData(data))
+        self.ticket_db.save_consent_request(ticket, ConsentRequest(data))
         assert self.cm.fetch_consent_request(ticket) == data
-        assert self.ticket_db.get_ticketdata(ticket) is None
+        assert self.ticket_db.get_consent_request(ticket) is None
 
     def test_fetch_consent_request_should_raise_exception_for_unknown_ticket(self):
         ticket = 'test_ticket'
         data = {'foo': 'bar', 'abc': 'xyz'}
-        self.ticket_db.save_consent_request(ticket, TicketData(data))
+        self.ticket_db.save_consent_request(ticket, ConsentRequest(data))
         assert self.cm.fetch_consent_request("unknown") is None
 
     def test_save_consent(self):
