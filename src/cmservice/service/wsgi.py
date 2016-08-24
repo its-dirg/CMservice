@@ -73,9 +73,7 @@ def create_app(config: dict = None):
     mako.init_app(app)
     app._mako_lookup = TemplateLookup(directories=[pkg_resources.resource_filename('cmservice.service', 'templates')],
                                       input_encoding='utf-8', output_encoding='utf-8',
-                                      imports=['from flask_babel import gettext as _']
-                                      # TODO not necessary according to https://pythonhosted.org/Flask-Mako/#babel-integration
-                                      )
+                                      imports=['from flask_babel import gettext as _'])
 
     app.cm = init_consent_manager(app)
 
