@@ -66,17 +66,13 @@ class TestConsentManager(object):
         with pytest.raises(InvalidConsentRequestError):
             self.cm.save_consent_request(consent_req)
 
-    def test_fetch_consent_request(self):
+    def test_fetch_consent_request(self, consent_request):
         ticket = 'test_ticket'
-        data = {'foo': 'bar', 'abc': 'xyz'}
-        self.ticket_db.save_consent_request(ticket, ConsentRequest(data))
-        assert self.cm.fetch_consent_request(ticket) == data
+        self.ticket_db.save_consent_request(ticket, consent_request)
+        assert self.cm.fetch_consent_request(ticket) == consent_request.data
         assert self.ticket_db.get_consent_request(ticket) is None
 
     def test_fetch_consent_request_should_raise_exception_for_unknown_ticket(self):
-        ticket = 'test_ticket'
-        data = {'foo': 'bar', 'abc': 'xyz'}
-        self.ticket_db.save_consent_request(ticket, ConsentRequest(data))
         assert self.cm.fetch_consent_request("unknown") is None
 
     def test_save_consent(self):

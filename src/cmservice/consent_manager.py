@@ -18,18 +18,18 @@ class InvalidConsentRequestError(ValueError):
 
 
 class ConsentManager(object):
-    def __init__(self, consent_db: ConsentDB, ticket_db: ConsentRequestDB, keys: list, ticket_ttl: int,
+    def __init__(self, consent_db: ConsentDB, ticket_db: ConsentRequestDB, trusted_keys: list, ticket_ttl: int,
                  max_months_valid: int):
         """
         :param consent_db: database in which the consent information is stored
         :param ticket_db: database in which the ticket information is stored
-        :param keys: Public keys to verify JWT signature.
-        :param ticket_ttl: How long the ticket should live in seconds.
+        :param trusted_keys: trusted public keys to verify JWT signature.
+        :param ticket_ttl: how long the ticket should live in seconds.
         :param max_months_valid: how long the consent should be valid
         """
         self.consent_db = consent_db
         self.ticket_db = ticket_db
-        self.keys = keys
+        self.trusted_keys = trusted_keys
         self.ticket_ttl = ticket_ttl
         self.max_months_valid = max_months_valid
 
@@ -41,31 +41,29 @@ class ConsentManager(object):
         :return True if valid consent exists else false
         """
         consent = self.consent_db.get_consent(id)
-        if consent and not consent.has_expired(self.max_month):
+        if consent and not consent.has_expired(self.max_months_valid):
             return consent.attributes
 
         logger.debug('No consented attributes for id: \'%s\'', id)
         return None
-
-    def _is_valid_consent_request(self, request: dict):
-        return set(['id', 'attr', 'redirect_endpoint']).issubset(set(request.keys()))
 
     def save_consent_request(self, jwt: str):
         """
         :param jwt: JWT represented as a string
         """
         try:
-            request = jws.factory(jwt).verify_compact(jwt, self.keys)
+            request = jws.factory(jwt).verify_compact(jwt, self.trusted_keys)
         except jwkest.Invalid as e:
             logger.debug('invalid signature: %s', str(e))
             raise InvalidConsentRequestError('Invalid signature') from e
 
-        if not self._is_valid_consent_request(request):
+        try:
+            data = ConsentRequest(request)
+        except ValueError:
             logger.debug('invalid consent request: %s', json.dumps(request))
             raise InvalidConsentRequestError('Invalid consent request')
 
         ticket = hashlib.sha256((jwt + str(mktime(gmtime()))).encode("UTF-8")).hexdigest()
-        data = ConsentRequest(request)
         self.ticket_db.save_consent_request(ticket, data)
         return ticket
 

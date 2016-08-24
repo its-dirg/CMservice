@@ -3,6 +3,8 @@ import os
 import pytest
 from OpenSSL import crypto
 
+from cmservice.ticket_data import ConsentRequest
+
 
 @pytest.fixture(scope='session')
 def cert_and_key(tmpdir_factory):
@@ -57,3 +59,13 @@ def app_config(cert_and_key):
         CONSENT_SALT='VFT0yZ2dXzAHRlGb0cAhsac2ipKueybl8ZfuPzsHUrTZ8o7Vs6HnAlMhwbob',
     )
     return config
+
+
+@pytest.fixture
+def consent_request():
+    consent_req_args = {
+        'id': 'test_id',
+        'redirect_endpoint': 'https://client.example.com/redirect',
+        'attr': ['foo', 'bar']
+    }
+    return ConsentRequest(consent_req_args)

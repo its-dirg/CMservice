@@ -7,6 +7,11 @@ class ConsentRequest(object):
         :param data: information needed to show the consent page
         :param timestamp: when the ticket data object was created
         """
+        mandatory_params = set(['id', 'attr', 'redirect_endpoint'])
+        if not mandatory_params.issubset(set(data.keys())):
+            # missing required info
+            raise ValueError('Incorrect consent request, missing some of mandatory params'.format(mandatory_params))
+
         if not timestamp:
             timestamp = datetime.now()
         self.timestamp = timestamp

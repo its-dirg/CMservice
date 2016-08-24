@@ -6,7 +6,6 @@ import pytest
 
 from cmservice.consent import Consent
 from cmservice.database import DictConsentDB, SQLite3ConsentDB, DictConsentRequestDB, SQLite3ConsentRequestDB
-from cmservice.ticket_data import ConsentRequest
 
 CONSENT_DATABASES = [DictConsentDB("salt", 999), SQLite3ConsentDB("salt", 999)]
 TICKET_DATABASES = [DictConsentRequestDB("salt"), SQLite3ConsentRequestDB("salt")]
@@ -14,13 +13,13 @@ TICKET_DATABASES = [DictConsentRequestDB("salt"), SQLite3ConsentRequestDB("salt"
 
 class TestConsentDB():
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, consent_request):
+        self.attributes = ['name', 'email']
         self.ticket = 'ticket_123'
-        self.time = datetime.datetime.now()
-        self.data = ConsentRequest({'asd': 'asd'}, timestamp=self.time)
+
+        self.data = consent_request
         self.consent_id = 'id_123'
-        self.attibutes = ['name', 'email']
-        self.consent = Consent(self.attibutes, 1, timestamp=self.time)
+        self.consent = Consent(self.attributes, 1)
 
     @pytest.mark.parametrize('database', CONSENT_DATABASES)
     def test_save_consent(self, database):
@@ -46,7 +45,7 @@ class TestConsentDB():
     @patch('cmservice.consent.datetime')
     def test_if_nothing_is_return_if_policy_has_expired(self, mock_datetime, database, start_time, current_time,
                                                         months_valid):
-        consent = Consent(self.attibutes, months_valid, timestamp=start_time)
+        consent = Consent(self.attributes, months_valid, timestamp=start_time)
         mock_datetime.now.return_value = current_time
         database.save_consent(self.consent_id, consent)
         assert not database.get_consent(self.consent_id)
@@ -58,7 +57,7 @@ class TestConsentDB():
     ])
     @patch('cmservice.consent.datetime')
     def test_if_policy_has_not_yet_expired(self, mock_datetime, database, start_time, current_time, months_valid):
-        consent = Consent(self.attibutes, months_valid, timestamp=start_time)
+        consent = Consent(self.attributes, months_valid, timestamp=start_time)
         mock_datetime.now.return_value = current_time
         database.save_consent(self.consent_id, consent)
         assert database.get_consent(self.consent_id)
@@ -91,15 +90,14 @@ class TestSQLite3ConsentDB(object):
         assert consent_db.get_consent(consent_id) == consent
 
 
-class TestSQLite3ConsentDB(object):
-    def test_store_db_in_file(self, tmpdir):
+class TestSQLite3ConsentRequestDB(object):
+    def test_store_db_in_file(self, tmpdir, consent_request):
         ticket = 'ticket1'
-        consent_req = ConsentRequest({"foo": "bar"})
         tmp_file = os.path.join(str(tmpdir), "db")
         consent_req_db = SQLite3ConsentRequestDB("salt", tmp_file)
-        consent_req_db.save_consent_request(ticket, consent_req)
-        assert consent_req_db.get_consent_request(ticket) == consent_req
+        consent_req_db.save_consent_request(ticket, consent_request)
+        assert consent_req_db.get_consent_request(ticket) == consent_request
 
         # make sure it was persisted to file
         consent_db = SQLite3ConsentRequestDB("salt", tmp_file)
-        assert consent_db.get_consent_request(ticket) == consent_req
+        assert consent_db.get_consent_request(ticket) == consent_request
