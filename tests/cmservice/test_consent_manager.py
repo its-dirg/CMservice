@@ -9,7 +9,7 @@ from jwkest.jws import JWS
 from cmservice.consent import Consent
 from cmservice.consent_manager import ConsentManager, InvalidConsentRequestError
 from cmservice.database import DictConsentDB, DictConsentRequestDB
-from cmservice.ticket_data import ConsentRequest
+from cmservice.consent_request import ConsentRequest
 
 
 class TestConsentManager(object):

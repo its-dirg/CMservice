@@ -8,7 +8,7 @@ from jwkest import jws
 
 from cmservice.consent import Consent
 from cmservice.database import ConsentDB, ConsentRequestDB
-from cmservice.ticket_data import ConsentRequest
+from cmservice.consent_request import ConsentRequest
 
 logger = logging.getLogger(__name__)
 

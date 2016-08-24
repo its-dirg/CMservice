@@ -3,7 +3,7 @@ import os
 import pytest
 from OpenSSL import crypto
 
-from cmservice.ticket_data import ConsentRequest
+from cmservice.consent_request import ConsentRequest
 
 
 @pytest.fixture(scope='session')

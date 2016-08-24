@@ -5,7 +5,7 @@ from datetime import datetime
 import dataset
 
 from cmservice.consent import Consent
-from cmservice.ticket_data import ConsentRequest
+from cmservice.consent_request import ConsentRequest
 
 
 def hash_id(id: str, salt: str):
