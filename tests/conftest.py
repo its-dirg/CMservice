@@ -44,7 +44,7 @@ def app_config(cert_and_key):
     config = dict(
         TESTING=True,
         DEBUG=True,
-        JWT_PUB_KEY=[cert_and_key[0]],
+        TRUSTED_KEYS=[cert_and_key[0]],
         SECRET_KEY='fdgfds%€#&436gfjhköltfsdjglök34j5oö43ijtglkfdjgasdftglok432jtgerfd',
         TICKET_TTL=600,
         CONSENT_DATABASE_CLASS_PATH='cmservice.database.DictConsentDB',

@@ -1,7 +1,7 @@
 SSL=True
 SERVER_CERT="./keys/server.crt"
 SERVER_KEY="./keys/server.key"
-JWT_PUB_KEY= ["./keys/satosa.pub"]
+TRUSTED_KEYS = ["./keys/satosa.pub"]
 SECRET_SESSION_KEY="fdgfds%€#&436gfjhköltfsdjglök34j5oö43ijtglkfdjgasdftglok432jtgerfd"
 PORT=8166
 HOST="127.0.0.1"

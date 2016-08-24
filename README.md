@@ -20,7 +20,7 @@ CMSERVICE_CONFIG=/Users/regu0004/dev/consent_service/server/settings.cfg gunicor
 | SSL | boolean | True | Should the server use https or not |
 | SERVER_CERT | String | "./keys/server.crt" | The path to the certificate file used by SSL comunication |
 | SERVER_KEY | String | "./keys/server.key" | The path to the key file used by SSL comunication |
-| JWT_PUB_KEY | List of strings | ["./keys/mykey.pub"] | A list of signature verification keys |
+| TRUSTED_KEYS | List of strings | ["./keys/mykey.pub"] | A list of signature verification keys |
 | SECRET_KEY | String | "t3ijtgglok432jtgerfd" | A random value used by cryptographic components to for example to sign the session cookie |
 | PORT | Integer | 8166 | Port on which the CMservice should start |
 | HOST | String | "127.0.0.1" | The IP-address on which the CMservice should run |

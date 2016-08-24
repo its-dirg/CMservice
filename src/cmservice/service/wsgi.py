@@ -46,7 +46,7 @@ def init_consent_manager(app):
                                               app.config['CONSENT_SALT'],
                                               app.config['TICKET_DATABASE_CLASS_PARAMETERS'])
 
-    trusted_keys = [RSAKey(key=rsa_load(key)) for key in app.config['JWT_PUB_KEY']]
+    trusted_keys = [RSAKey(key=rsa_load(key)) for key in app.config['TRUSTED_KEYS']]
     cm = ConsentManager(consent_db, ticket_db, trusted_keys, app.config['TICKET_TTL'],
                         app.config['MAX_CONSENT_EXPIRATION_MONTH'])
     return cm
