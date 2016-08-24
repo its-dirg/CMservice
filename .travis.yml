@@ -14,3 +14,4 @@ matrix:
 
 script:
   - tox
+  - if [[ "${TRAVIS_BRANCH}" == "master" ]]; then py.test tests/integration_tests.py; fi
