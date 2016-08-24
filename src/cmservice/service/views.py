@@ -92,13 +92,7 @@ def save_consent():
 
 def render_consent(language):
     session['language'] = language
-
-    requester_name = find_requester_name(language)
-    # TODO move this to find_requester_name
-    if not requester_name:
-        requester_name = find_requester_name('en')
-    if not requester_name:
-        requester_name = session['requester_name'][0]['text']
+    requester_name = find_requester_name(session['requester_name'], language)
 
     locked_attr = session['locked_attrs']
     if not isinstance(locked_attr, list):
@@ -125,9 +119,8 @@ def render_consent(language):
     )
 
 
-def find_requester_name(language):
-    match = None
-    for requester_name in session['requester_name']:
-        if requester_name['lang'] == language:
-            match = requester_name['text']
-    return match
+def find_requester_name(requester_name, language):
+    requester_names = {entry['lang']: entry['text'] for entry in requester_name}
+    # fallback to english, or if all else fails, use the first entry in the list of names
+    fallback = requester_names.get('en', requester_name[0]['text'])
+    return requester_names.get(language, fallback)
