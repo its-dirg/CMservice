@@ -18,7 +18,7 @@ setup(
     package_dir={'': 'src'},
     package_data={
         'cmservice.service': [
-            'data/i18n/locales/*/LC_MESSAGES/*.po',
+            'data/i18n/locales/*/LC_MESSAGES/*.mo',
             'templates/*.mako',
             'site/static/*',
         ],
@@ -32,7 +32,8 @@ setup(
         'Flask-Babel',
         'Flask-Mako',
         'dataset',
-        'gunicorn'
+        'gunicorn',
+        'python-dateutil'
     ],
     zip_safe=False,
     message_extractors={'.': [
