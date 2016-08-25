@@ -6,12 +6,11 @@ To install all necessary dependencies, run `python setup.py install` in the root
 
 # Run CMservice 
 
-Copy the **settings.cfg.example** and rename the copy **settings.cfg**. At the moment it's not 
-possible to name the configuration anything other then **settings.cfg**. If needed modify the 
+Copy the **settings.cfg.example** and rename the copy **settings.cfg**. If needed modify the 
 necessary configurations. 
 
 ```shell
-CMSERVICE_CONFIG=/Users/regu0004/dev/consent_service/server/settings.cfg gunicorn cmservice.service.run:app
+CMSERVICE_CONFIG=<path to settings.cfg> gunicorn cmservice.service.run:app
 ```
 
 # Configuration
