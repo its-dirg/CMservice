@@ -8,15 +8,14 @@ from jwkest.jws import JWS
 
 from cmservice.consent import Consent
 from cmservice.consent_manager import ConsentManager, InvalidConsentRequestError
-from cmservice.database import DictConsentDB, DictConsentRequestDB
-from cmservice.consent_request import ConsentRequest
+from cmservice.database import ConsentRequestDatasetDB, ConsentDatasetDB
 
 
 class TestConsentManager(object):
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.consent_db = DictConsentDB("salt", 12)
-        self.ticket_db = DictConsentRequestDB("salt")
+        self.consent_db = ConsentDatasetDB("salt", 12)
+        self.ticket_db = ConsentRequestDatasetDB("salt")
         self.max_month = 12
         self.signing_key = RSAKey(key=RSA.generate(1024), alg='RS256')
 

@@ -11,7 +11,7 @@ from jwkest.jwk import RSAKey, rsa_load
 from mako.lookup import TemplateLookup
 
 from cmservice.consent_manager import ConsentManager
-from cmservice.database import ConsentDB, ConsentRequestDB
+from cmservice.database import ConsentDB, ConsentRequestDB, ConsentDatasetDB, ConsentRequestDatasetDB
 
 
 def import_database_class(db_module_name: str) -> type:
@@ -38,16 +38,13 @@ def load_consent_request_db_class(db_class: str, salt: str, init_args: list):
 
 
 def init_consent_manager(app: Flask):
-    consent_db = load_consent_db_class(app.config['CONSENT_DATABASE_CLASS_PATH'],
-                                       app.config['CONSENT_SALT'],
-                                       app.config['MAX_CONSENT_EXPIRATION_MONTH'],
-                                       app.config['CONSENT_DATABASE_CLASS_PARAMETERS'])
-    ticket_db = load_consent_request_db_class(app.config['TICKET_DATABASE_CLASS_PATH'],
-                                              app.config['CONSENT_SALT'],
-                                              app.config['TICKET_DATABASE_CLASS_PARAMETERS'])
+    consent_db = ConsentDatasetDB(app.config['CONSENT_SALT'], app.config['MAX_CONSENT_EXPIRATION_MONTH'],
+                                  app.config.get('CONSENT_DATABASE_URL'))
+    consent_request_db = ConsentRequestDatasetDB(app.config['CONSENT_SALT'],
+                                                 app.config.get('CONSENT_REQUEST_DATABASE_URL'))
 
     trusted_keys = [RSAKey(key=rsa_load(key)) for key in app.config['TRUSTED_KEYS']]
-    cm = ConsentManager(consent_db, ticket_db, trusted_keys, app.config['TICKET_TTL'],
+    cm = ConsentManager(consent_db, consent_request_db, trusted_keys, app.config['TICKET_TTL'],
                         app.config['MAX_CONSENT_EXPIRATION_MONTH'])
     return cm
 
