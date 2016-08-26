@@ -49,13 +49,9 @@ def app_config(cert_and_key):
         TRUSTED_KEYS=[cert_and_key[0]],
         SECRET_KEY='fdgfds%€#&436gfjhköltfsdjglök34j5oö43ijtglkfdjgasdftglok432jtgerfd',
         TICKET_TTL=600,
-        CONSENT_DATABASE_CLASS_PATH='cmservice.database.DictConsentDB',
-        CONSENT_DATABASE_CLASS_PARAMETERS=[],
         AUTO_SELECT_ATTRIBUTES=True,
         MAX_CONSENT_EXPIRATION_MONTH=12,
         USER_CONSENT_EXPIRATION_MONTH=[3, 6],
-        TICKET_DATABASE_CLASS_PATH='cmservice.database.DictConsentRequestDB',
-        TICKET_DATABASE_CLASS_PARAMETERS=[],
         CONSENT_SALT='VFT0yZ2dXzAHRlGb0cAhsac2ipKueybl8ZfuPzsHUrTZ8o7Vs6HnAlMhwbob',
     )
     return config

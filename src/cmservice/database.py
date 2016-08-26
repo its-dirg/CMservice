@@ -48,65 +48,43 @@ class ConsentRequestDB(object):
         raise NotImplementedError("Must be implemented!")
 
 
-class DictConsentRequestDB(ConsentRequestDB):
-    def __init__(self, salt: str):
-        super().__init__(salt)
-        self.tickets = {}
-
-    def save_consent_request(self, ticket: str, consent_request: ConsentRequest):
-        hashed_id = hash_id(ticket, self.salt)
-        self.tickets[hashed_id] = consent_request
-
-    def get_consent_request(self, ticket: str) -> ConsentRequest:
-        try:
-            hashed_id = hash_id(ticket, self.salt)
-            return self.tickets[hashed_id]
-        except KeyError:
-            return None
-
-    def remove_consent_request(self, ticket: str):
-        try:
-            hashed_id = hash_id(ticket, self.salt)
-            del self.tickets[hashed_id]
-        except KeyError:
-            pass
-
-
-class SQLite3ConsentRequestDB(ConsentRequestDB):
-    TICKET_TABLE_NAME = 'consent_request'
+class ConsentRequestDatasetDB(ConsentRequestDB):
+    """
+    Implementation using the `dataset` library.
+    """
     TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
-    def __init__(self, salt: str, ticket_db_path: str = None):
+    def __init__(self, salt: str, consent_request_path: str = None):
         """
         Constructor.
-        :param ticket_db_path:  path to the SQLite db.
+        :param consent_request_path:  path to the SQLite db.
                                 If not specified an in-memory database will be used.
         """
         super().__init__(salt)
-        if ticket_db_path:
-            self.ticket_db = dataset.connect('sqlite:///' + ticket_db_path)
+        if consent_request_path:
+            self.consent_request_db = dataset.connect(consent_request_path)
         else:
-            self.ticket_db = dataset.connect('sqlite:///:memory:')
-        self.ticket_table = self.ticket_db[self.TICKET_TABLE_NAME]
+            self.consent_request_db = dataset.connect('sqlite:///:memory:')
+        self.consent_request_table = self.consent_request_db['consent_request']
 
     def save_consent_request(self, ticket: str, consent_request: ConsentRequest):
         row = {
             'ticket': hash_id(ticket, self.salt),
             'data': json.dumps(consent_request.data),
-            'timestamp': consent_request.timestamp.strftime(SQLite3ConsentRequestDB.TIME_PATTERN)
+            'timestamp': consent_request.timestamp.strftime(ConsentRequestDatasetDB.TIME_PATTERN)
         }
-        self.ticket_table.insert(row)
+        self.consent_request_table.insert(row)
 
     def get_consent_request(self, ticket: str) -> ConsentRequest:
-        result = self.ticket_table.find_one(ticket=hash_id(ticket, self.salt))
+        result = self.consent_request_table.find_one(ticket=hash_id(ticket, self.salt))
         if result:
             return ConsentRequest(json.loads(result['data']),
                                   timestamp=datetime.strptime(result['timestamp'],
-                                                              SQLite3ConsentRequestDB.TIME_PATTERN))
+                                                              ConsentRequestDatasetDB.TIME_PATTERN))
         return None
 
     def remove_consent_request(self, ticket: str):
-        self.ticket_table.delete(ticket=hash_id(ticket, self.salt))
+        self.consent_request_table.delete(ticket=hash_id(ticket, self.salt))
 
 
 class ConsentDB(object):
@@ -146,31 +124,10 @@ class ConsentDB(object):
         raise NotImplementedError("Must be implemented!")
 
 
-class DictConsentDB(ConsentDB):
-    def __init__(self, salt: str, max_months_valid: int):
-        super().__init__(salt, max_months_valid)
-        self.consent_db = {}
-
-    def save_consent(self, id: str, consent: Consent):
-        hashed_id = hash_id(id, self.salt)
-        self.consent_db[hashed_id] = consent
-
-    def get_consent(self, id: str) -> Consent:
-        hashed_id = hash_id(id, self.salt)
-        if hashed_id not in self.consent_db:
-            return None
-        consent = self.consent_db[hashed_id]
-        if consent.has_expired(self.max_month):
-            self.remove_consent(id)
-            return None
-        return self.consent_db[hashed_id]
-
-    def remove_consent(self, id: str):
-        hashed_id = hash_id(id, self.salt)
-        del self.consent_db[hashed_id]
-
-
-class SQLite3ConsentDB(ConsentDB):
+class ConsentDatasetDB(ConsentDB):
+    """
+    Implementation using the `dataset` library.
+    """
     CONSENT_TABLE_NAME = 'consent'
     TIME_PATTERN = "%Y %m %d %H:%M:%S"
 
@@ -182,7 +139,7 @@ class SQLite3ConsentDB(ConsentDB):
         """
         super().__init__(salt, max_months_valid)
         if consent_db_path:
-            self.consent_db = dataset.connect('sqlite:///' + consent_db_path)
+            self.consent_db = dataset.connect(consent_db_path)
         else:
             self.consent_db = dataset.connect('sqlite:///:memory:')
         self.consent_table = self.consent_db[self.CONSENT_TABLE_NAME]
@@ -190,7 +147,7 @@ class SQLite3ConsentDB(ConsentDB):
     def save_consent(self, id: str, consent: Consent):
         data = {
             'consent_id': hash_id(id, self.salt),
-            'timestamp': consent.timestamp.strftime(SQLite3ConsentDB.TIME_PATTERN),
+            'timestamp': consent.timestamp.strftime(ConsentDatasetDB.TIME_PATTERN),
             'months_valid': consent.months_valid,
             'attributes': json.dumps(consent.attributes),
         }
@@ -203,7 +160,7 @@ class SQLite3ConsentDB(ConsentDB):
             return None
 
         consent = Consent(json.loads(result['attributes']), result['months_valid'],
-                          datetime.strptime(result['timestamp'], SQLite3ConsentDB.TIME_PATTERN))
+                          datetime.strptime(result['timestamp'], ConsentDatasetDB.TIME_PATTERN))
         if consent.has_expired(self.max_month):
             self.remove_consent(id)
             return None
