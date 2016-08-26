@@ -111,7 +111,6 @@ def render_consent(language: str) -> None:
         released_claims=released_claims,
         locked_claims=locked_claims,
         form_action='/set_language',
-        name='mako',
         language=language,
         requester_name=requester_name,
         months=current_app.config['USER_CONSENT_EXPIRATION_MONTH'],
