@@ -13,6 +13,9 @@ necessary configurations.
 CMSERVICE_CONFIG=<path to settings.cfg> gunicorn cmservice.service.run:app
 ```
 
+Make sure to setup HTTPS cert and key, and bind to the correct host/port using
+[gunicorn settings](http://docs.gunicorn.org/en/latest/settings.html).
+
 # Configuration
 | Parameter name | Data type | Example value | Description |
 | -------------- | --------- | ------------- | ----------- |
@@ -21,8 +24,8 @@ CMSERVICE_CONFIG=<path to settings.cfg> gunicorn cmservice.service.run:app
 | SERVER_KEY | String | "./keys/server.key" | The path to the key file used by SSL comunication |
 | TRUSTED_KEYS | List of strings | ["./keys/mykey.pub"] | A list of signature verification keys |
 | SECRET_KEY | String | "t3ijtgglok432jtgerfd" | A random value used by cryptographic components to for example to sign the session cookie |
-| PORT | Integer | 8166 | Port on which the CMservice should start |
-| HOST | String | "127.0.0.1" | The IP-address on which the CMservice should run |
+| PORT | Integer | 8166 | Port on which the CMservice should start if running the dev server in `run.py` |
+| HOST | String | "127.0.0.1" | The IP-address on which the CMservice should run if running the dev server in `run.py` |
 | DEBUG | boolean | False | Turn on or off the Flask servers internal debuggin, should be turned off to ensure that all log information get stored in the log file |
 | TICKET_TTL | Integer | 600 | For how many seconds the ticket should be valid |
 | CONSENT_DATABASE_URL | String | "mysql://localhost:3306/consent" | URL to SQLite/MySQL/Postgres database, if not supplied an in-memory SQLite database will be used |
