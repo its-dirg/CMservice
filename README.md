@@ -10,7 +10,7 @@ Copy the **settings.cfg.example** and rename the copy **settings.cfg**. If neede
 necessary configurations. 
 
 ```shell
-CMSERVICE_CONFIG=<path to settings.cfg> gunicorn cmservice.service.run:app
+export CMSERVICE_CONFIG=<path to settings.cfg> gunicorn cmservice.service.run:app
 ```
 
 Make sure to setup HTTPS cert and key, and bind to the correct host/port using
