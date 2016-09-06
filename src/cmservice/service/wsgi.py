@@ -83,6 +83,9 @@ def create_app(config: dict = None):
     app.register_blueprint(consent_views)
 
     setup_logging(app.config.get('LOGGING_LEVEL', 'INFO'))
+
+    logger = logging.getLogger(__name__)
+    logger.info("Running CMservice version %s", pkg_resources.get_distribution("CMservice").version)
     return app
 
 
