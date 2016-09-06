@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='CMservice',
-    version='1.0.0',
+    version='2.0.0',
     description='',
     author='DIRG',
     author_email='dirg@its.umu.se',
