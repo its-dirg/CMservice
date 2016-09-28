@@ -61,12 +61,20 @@ def consent(ticket):
     session['requester_name'] = data['requester_name']
 
     # TODO should find list of supported languages dynamically
-    return render_consent(language=request.accept_languages.best_match(['sv', 'en']))
+    session['language'] = request.accept_languages.best_match(['sv', 'en'])
+    requester_name = find_requester_name(session['requester_name'], session['language'])
+    return render_consent(session['language'], requester_name, session['locked_attrs'], copy.deepcopy(session['attr']),
+                          session['state'], current_app.config['USER_CONSENT_EXPIRATION_MONTH'],
+                          str(current_app.config['AUTO_SELECT_ATTRIBUTES']))
 
 
 @consent_views.route('/set_language')
 def set_language():
-    return render_consent(request.args['lang'])
+    session['language'] = request.args['lang']
+    requester_name = find_requester_name(session['requester_name'], session['language'])
+    return render_consent(session['language'], requester_name, session['locked_attrs'], copy.deepcopy(session['attr']),
+                          session['state'], current_app.config['USER_CONSENT_EXPIRATION_MONTH'],
+                          str(current_app.config['AUTO_SELECT_ATTRIBUTES']))
 
 
 @consent_views.route('/save_consent')
@@ -90,32 +98,23 @@ def save_consent():
     return redirect(redirect_uri)
 
 
-def render_consent(language: str) -> None:
-    session['language'] = language
-    requester_name = find_requester_name(session['requester_name'], language)
-
-    locked_attr = session['locked_attrs']
+def render_consent(language: str, requester_name: str, locked_attr: list, released_claims: dict, state: str,
+                   months: list, select_attributes: bool) -> str:
     if not isinstance(locked_attr, list):
         locked_attr = [locked_attr]
-
-    released_claims = copy.deepcopy(session['attr'])
-    locked_claims = {}
-    for l_attr in locked_attr:
-        locked_claims[l_attr] = released_claims[l_attr]
-        del released_claims[l_attr]
+    locked_claims = {k: released_claims.pop(k) for k in locked_attr if k in released_claims}
 
     return render_template(
         'consent.mako',
         consent_question=None,
-        state=session['state'],
+        state=state,
         released_claims=released_claims,
         locked_claims=locked_claims,
         form_action='/set_language',
         language=language,
         requester_name=requester_name,
-        months=current_app.config['USER_CONSENT_EXPIRATION_MONTH'],
-        select_attributes=str(current_app.config['AUTO_SELECT_ATTRIBUTES'])
-    )
+        months=months,
+        select_attributes=select_attributes)
 
 
 def find_requester_name(requester_name: list, language: str) -> str:
