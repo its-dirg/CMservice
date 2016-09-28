@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @consent_views.route('/static/<path:path>')
-def send_js(path):
+def static(path):
     return send_from_directory(pkg_resources.resource_filename('cmservice.service', 'site/static'), path)
 
 
