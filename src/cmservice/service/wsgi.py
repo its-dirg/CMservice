@@ -55,6 +55,7 @@ def setup_logging(logging_level: str):
     hdlr = logging.StreamHandler(sys.stdout)
     hdlr.setFormatter(base_formatter)
     hdlr.setLevel(logging_level)
+    logger.setLevel(logging_level)
     logger.addHandler(hdlr)
 
 
