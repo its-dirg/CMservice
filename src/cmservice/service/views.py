@@ -36,8 +36,10 @@ def verify(id):
     abort(401)
 
 
-@consent_views.route("/creq/<jwt>")
+@consent_views.route("/creq/<jwt>", methods=['GET','POST'])
 def creq(jwt):
+    if request.method == 'POST':
+        jwt = request.values.get('jwt')
     try:
         ticket = current_app.cm.save_consent_request(jwt)
         return ticket
